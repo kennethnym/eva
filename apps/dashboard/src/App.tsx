@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import cn from "./components/lib/cn"
+import { StatusSeverity, getLineColor, getStatusBorderColor, tflDisruptionsQuery } from "./tfl"
 import {
 	DEFAULT_LATITUDE,
 	DEFAULT_LONGITUDE,
@@ -15,17 +16,26 @@ function App() {
 		<div className="h-screen bg-black gap-4 text-neutral-200 grid grid-cols-4 grid-rows-5 p-4">
 			<DateTimeTile />
 			<WeatherTile />
+			<TFLTile />
 		</div>
 	)
 }
 
-function Tile({ children, className }: { children: React.ReactNode; className?: string }) {
+function Tile({
+	decorations = true,
+	children,
+	className,
+}: { decorations?: boolean; children: React.ReactNode; className?: string }) {
 	return (
 		<div className={cn("relative bg-neutral-900 flex flex-col justify-end items-start", className)}>
-			<div className="absolute top-0 left-0 w-4 h-[1px] bg-neutral-200" />
-			<div className="absolute top-0 left-0 w-[1px] h-4 bg-neutral-200" />
-			<div className="absolute bottom-0 right-0 w-4 h-[1px] bg-neutral-200" />
-			<div className="absolute bottom-0 right-0 w-[1px] h-4 bg-neutral-200" />
+			{decorations && (
+				<>
+					<div className="absolute top-0 left-0 w-4 h-[1px] bg-neutral-200" />
+					<div className="absolute top-0 left-0 w-[1px] h-4 bg-neutral-200" />
+					<div className="absolute bottom-0 right-0 w-4 h-[1px] bg-neutral-200" />
+					<div className="absolute bottom-0 right-0 w-[1px] h-4 bg-neutral-200" />
+				</>
+			)}
 			{children}
 		</div>
 	)
@@ -192,6 +202,92 @@ function WeatherTile() {
 				</div>
 			</div>
 		</Tile>
+	)
+}
+
+function TFLTile() {
+	const {
+		data: tflData,
+		isLoading: isLoadingTFL,
+		error: errorTFL,
+	} = useQuery({
+		...tflDisruptionsQuery(),
+		select: (data) => {
+			data.disruptions.sort((a, b) => {
+				if (a.lineName.match(/northern/i)) return -1
+				return a.statusSeverity - b.statusSeverity
+			})
+			return data
+		},
+		refetchInterval: 5 * 60 * 1000, // 5 minutes
+		refetchIntervalInBackground: true,
+	})
+
+	if (isLoadingTFL) {
+		return (
+			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-2 flex flex-row justify-start items-center p-8">
+				<p className="text-2xl font-light animate-pulse">Loading TfL</p>
+			</Tile>
+		)
+	}
+
+	return (
+		<Tile
+			decorations={false}
+			className="gap-x-1 col-start-3 h-full row-start-1 col-span-2 row-span-1 grid grid-cols-[min-content_1fr] auto-rows-min overflow-y-auto"
+		>
+			{tflData?.goodService.includes("Northern") && (
+				<TFLDistruptionItem
+					lineId="northern"
+					lineName="Northern"
+					reason="Good service"
+					severity={StatusSeverity.GoodService}
+				/>
+			)}
+			{tflData?.disruptions.map((disruption) => (
+				<>
+					<TFLDistruptionItem
+						key={disruption.lineId}
+						lineId={disruption.lineId}
+						lineName={disruption.lineName}
+						reason={disruption.reason ?? "Unknown reason"}
+						severity={disruption.statusSeverity}
+					/>
+					<hr className="col-span-2 border-neutral-700" />
+				</>
+			))}
+		</Tile>
+	)
+}
+
+function TFLDistruptionItem({
+	lineId,
+	lineName,
+	reason,
+	severity,
+}: { lineId: string; lineName: string; reason: string; severity: number }) {
+	return (
+		<>
+			<div className="h-full flex items-center justify-center px-2 py-0.5">
+				<p
+					className={cn(
+						"text-xl uppercase font-bold bg-blue-500 w-full text-center px-1 rounded-sm",
+						getLineColor(lineId),
+						getStatusBorderColor(severity),
+					)}
+				>
+					{lineName}
+				</p>
+			</div>
+			<p
+				className={cn(
+					"text-xl text-wrap text-neutral-300 leading-tight self-center pr-2 py-1 font-light border-r-4",
+					getStatusBorderColor(severity),
+				)}
+			>
+				{reason}
+			</p>
+		</>
 	)
 }
 
