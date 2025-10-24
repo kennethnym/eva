@@ -225,7 +225,7 @@ function TFLTile() {
 
 	if (isLoadingTFL) {
 		return (
-			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-2 flex flex-row justify-start items-center p-8">
+			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-1 flex flex-row justify-start items-center p-8">
 				<p className="text-2xl font-light animate-pulse">Loading TfL</p>
 			</Tile>
 		)
