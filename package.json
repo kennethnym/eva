@@ -1,0 +1,20 @@
+{
+	"name": "monorepo",
+	"version": "1.0.0",
+	"private": true,
+	"workspaces": ["apps/*"],
+	"scripts": {
+		"dev": "bun run --elide-lines 0 --filter './apps/*' dev",
+		"build": "bun run --filter '*' build",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4"
+	},
+	"dependencies": {
+		"clsx": "^2.1.1",
+		"tailwind-merge": "^3.3.1"
+	}
+}

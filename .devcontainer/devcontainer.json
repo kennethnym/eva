@@ -1,0 +1,25 @@
+{
+	"name": "Monorepo - Bun + React",
+	"build": {
+		"context": ".",
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"biomejs.biome",
+				"oven.bun-vscode"
+			],
+			"settings": {
+				"editor.defaultFormatter": "biomejs.biome",
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
+					"quickfix.biome": "explicit",
+					"source.organizeImports.biome": "explicit"
+				}
+			}
+		}
+	},
+	"forwardPorts": [3000, 5173],
+	"postCreateCommand": "bun install && ./scripts/setup-git.sh"
+}
