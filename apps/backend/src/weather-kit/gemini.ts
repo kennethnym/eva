@@ -35,7 +35,7 @@ export async function generateWeatherDescription(
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
@@ -53,7 +53,7 @@ export async function generateWeatherDescription(
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 120,
+            maxOutputTokens: 1000,
             topP: 0.95,
           },
         }),
