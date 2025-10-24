@@ -226,7 +226,24 @@ function TFLTile() {
 	if (isLoadingTFL) {
 		return (
 			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-1 flex flex-row justify-start items-center p-8">
-				<p className="text-2xl font-light animate-pulse">Loading TfL</p>
+				<p className="text-2xl font-light animate-pulse">Loading tube status</p>
+			</Tile>
+		)
+	}
+
+	if (errorTFL) {
+		return (
+			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-1 flex flex-row justify-start items-center p-8">
+				<p className="text-2xl font-light text-red-400">Error loading from TfL</p>
+				<p className="text-neutral-400">{errorTFL?.message}</p>
+			</Tile>
+		)
+	}
+
+	if (!tflData) {
+		return (
+			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-1 flex flex-row justify-start items-center p-8">
+				<p className="text-2xl font-light">No TfL data available</p>
 			</Tile>
 		)
 	}
@@ -236,7 +253,7 @@ function TFLTile() {
 			decorations={false}
 			className="gap-x-1 col-start-3 h-full row-start-1 col-span-2 row-span-1 grid grid-cols-[min-content_1fr] auto-rows-min overflow-y-auto"
 		>
-			{tflData?.goodService.includes("Northern") && (
+			{tflData.goodService.includes("Northern") && (
 				<TFLDistruptionItem
 					lineId="northern"
 					lineName="Northern"
@@ -244,7 +261,7 @@ function TFLTile() {
 					severity={StatusSeverity.GoodService}
 				/>
 			)}
-			{tflData?.disruptions.map((disruption) => (
+			{tflData.disruptions.map((disruption) => (
 				<Fragment key={disruption.lineId}>
 					<TFLDistruptionItem
 						lineId={disruption.lineId}
