@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import cn from "./components/lib/cn"
 import { StatusSeverity, getLineColor, getStatusBorderColor, tflDisruptionsQuery } from "./tfl"
 import {
@@ -245,16 +245,15 @@ function TFLTile() {
 				/>
 			)}
 			{tflData?.disruptions.map((disruption) => (
-				<>
+				<Fragment key={disruption.lineId}>
 					<TFLDistruptionItem
-						key={disruption.lineId}
 						lineId={disruption.lineId}
 						lineName={disruption.lineName}
 						reason={disruption.reason ?? "Unknown reason"}
 						severity={disruption.statusSeverity}
 					/>
 					<hr className="col-span-2 border-neutral-700" />
-				</>
+				</Fragment>
 			))}
 		</Tile>
 	)
