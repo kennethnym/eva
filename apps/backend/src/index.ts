@@ -3,6 +3,7 @@ import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 import weather from "./weather"
 import tfl from "./tfl"
+import beszel from "./beszel"
 
 const app = new Hono()
 
@@ -22,6 +23,9 @@ app.route("/api/weather", weather)
 
 // Mount TfL routes
 app.route("/api/tfl", tfl)
+
+// Mount Beszel routes
+app.route("/api/beszel", beszel)
 
 export default {
 	port: 8000,

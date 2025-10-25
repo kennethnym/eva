@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
-import { Fragment, useEffect, useState } from "react"
+import Chart from "chart.js/auto"
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState } from "react"
+import { beszelSystemsQuery } from "./beszel"
 import cn from "./components/lib/cn"
 import { StatusSeverity, formatLineName, getLineColor, getStatusBorderColor, tflDisruptionsQuery } from "./tfl"
 import {
@@ -17,6 +19,8 @@ function App() {
 			<DateTimeTile />
 			<WeatherTile />
 			<TFLTile />
+			<SystemTile systemName="helian" displayName="Helian" />
+			<SystemTile systemName="akira" displayName="Akira" />
 		</div>
 	)
 }
@@ -294,6 +298,121 @@ function TFLDistruptionItem({ lineId, reason, severity }: { lineId: string; reas
 				{reason}
 			</p>
 		</>
+	)
+}
+
+function SystemTile({
+	className,
+	systemName,
+	displayName,
+}: { className?: string; systemName: string; displayName: string }) {
+	const { data } = useQuery({
+		...beszelSystemsQuery(),
+		refetchInterval: 1000,
+		refetchIntervalInBackground: true,
+	})
+	const chartRef = useRef<Chart | null>(null)
+
+	const beszelSystemsData = data?.systems.find((system) => system.name === systemName)
+
+	const onCanvasRef = (elem: HTMLCanvasElement | null) => {
+		if (!elem || chartRef.current) return
+
+		const fillGradient = elem?.getContext("2d")?.createLinearGradient(0, 0, 0, elem.height)
+		fillGradient?.addColorStop(0, "#2dd4bf")
+		fillGradient?.addColorStop(0.5, "rgba(45, 212, 191, 0)")
+		fillGradient?.addColorStop(1, "rgba(45, 212, 191, 0)")
+		chartRef.current = new Chart(elem, {
+			type: "line",
+			data: {
+				labels: Array.from({ length: 20 }, (_, index) => index),
+				datasets: [
+					{
+						data: Array.from({ length: 20 }, (_, i) => null),
+						fill: true,
+						backgroundColor: fillGradient,
+						borderColor: "#2dd4bf",
+						tension: 0.1,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				scales: {
+					x: { display: false },
+					y: { display: false, min: 0, max: 100 },
+				},
+				maintainAspectRatio: false,
+				elements: {
+					point: { radius: 0 },
+					line: {
+						backgroundColor: "rgba(255, 255, 255, 0.5)",
+					},
+				},
+				plugins: {
+					legend: {
+						display: false,
+					},
+				},
+			},
+		})
+
+		console.log("chartRef.current", chartRef.current)
+	}
+
+	useLayoutEffect(() => {
+		const cpu = beszelSystemsData?.info.cpu
+		if (!chartRef.current || cpu === undefined) return
+
+		const dataset = chartRef.current.data.datasets[0]
+
+		const nextData = Array.from({ length: 20 }, (_, i) => {
+			if (i === 19) {
+				return null
+			}
+			return dataset.data[i + 1]
+		})
+		nextData[19] = cpu
+
+		dataset.data = nextData
+		chartRef.current.update()
+	})
+
+	if (!beszelSystemsData) {
+		return (
+			<Tile className={cn("h-full row-start-2 flex flex-row justify-start items-center p-8", className)}>
+				<p className="text-2xl font-light">No system status available</p>
+			</Tile>
+		)
+	}
+
+	return (
+		<Tile
+			decorations={false}
+			className={cn("h-full row-start-2 flex flex-col justify-start items-start", className)}
+		>
+			<div className="grid grid-cols-6 px-4 pt-3 w-full">
+				<div className="col-span-3 flex flex-row items-center space-x-2">
+					<p className="text-2xl">{displayName}</p>
+					<div className="size-2 border border-green-300 bg-green-500 rounded-full animate-pulse" />
+				</div>
+				<div className="flex flex-col font-mono">
+					<p className="text-neutral-400 text-right leading-none">CPU</p>
+					<p className="text-right">{beszelSystemsData.info.cpu.toFixed(0).padStart(3, "0")}</p>
+				</div>
+				<div className="flex flex-col font-mono">
+					<p className="text-neutral-400 text-right leading-none">RAM</p>
+					<p className="text-right">{beszelSystemsData.info.ram.toFixed(0).padStart(3, "0")}</p>
+				</div>
+				<div className="flex flex-col font-mono">
+					<p className="text-neutral-400 text-right leading-none">DSK</p>
+					<p className="text-right">{beszelSystemsData.info.disk.toFixed(0).padStart(3, "0")}</p>
+				</div>
+			</div>
+			<div className="w-full flex-1 min-w-0 basis-0 relative mb-2">
+				<canvas ref={onCanvasRef} className="min-h-0 absolute top-0 left-0 w-full h-full" />
+			</div>
+		</Tile>
 	)
 }
 
