@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Fragment, useEffect, useState } from "react"
 import cn from "./components/lib/cn"
-import { StatusSeverity, getLineColor, getStatusBorderColor, tflDisruptionsQuery } from "./tfl"
+import { StatusSeverity, formatLineName, getLineColor, getStatusBorderColor, tflDisruptionsQuery } from "./tfl"
 import {
 	DEFAULT_LATITUDE,
 	DEFAULT_LONGITUDE,
@@ -254,18 +254,12 @@ function TFLTile() {
 			className="gap-x-1 col-start-3 h-full row-start-1 col-span-2 row-span-1 grid grid-cols-[min-content_1fr] auto-rows-min overflow-y-auto"
 		>
 			{tflData.goodService.includes("Northern") && (
-				<TFLDistruptionItem
-					lineId="northern"
-					lineName="Northern"
-					reason="Good service"
-					severity={StatusSeverity.GoodService}
-				/>
+				<TFLDistruptionItem lineId="northern" reason="Good service" severity={StatusSeverity.GoodService} />
 			)}
 			{tflData.disruptions.map((disruption) => (
 				<Fragment key={disruption.lineId}>
 					<TFLDistruptionItem
 						lineId={disruption.lineId}
-						lineName={disruption.lineName}
 						reason={disruption.reason ?? "Unknown reason"}
 						severity={disruption.statusSeverity}
 					/>
@@ -276,12 +270,8 @@ function TFLTile() {
 	)
 }
 
-function TFLDistruptionItem({
-	lineId,
-	lineName,
-	reason,
-	severity,
-}: { lineId: string; lineName: string; reason: string; severity: number }) {
+function TFLDistruptionItem({ lineId, reason, severity }: { lineId: string; reason: string; severity: number }) {
+	const lineName = formatLineName(lineId)
 	return (
 		<>
 			<div className="h-full flex items-center justify-center px-2 py-0.5">
