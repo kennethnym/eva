@@ -4,6 +4,11 @@
 		"context": ".",
 		"dockerfile": "Dockerfile"
 	},
+	"features": {
+		"ghcr.io/tailscale/codespace/tailscale": {
+			"version": "latest"
+		}
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
