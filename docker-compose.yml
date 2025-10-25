@@ -5,6 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Vite environment variables for dashboard build
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        VITE_DEFAULT_LATITUDE: ${VITE_DEFAULT_LATITUDE:-37.7749}
+        VITE_DEFAULT_LONGITUDE: ${VITE_DEFAULT_LONGITUDE:--122.4194}
     image: eva-monorepo:latest
     container_name: eva
     restart: unless-stopped

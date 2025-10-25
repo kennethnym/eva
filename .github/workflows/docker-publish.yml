@@ -49,6 +49,12 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+            VITE_DEFAULT_LATITUDE=${{ vars.VITE_DEFAULT_LATITUDE }}
+            VITE_DEFAULT_LONGITUDE=${{ vars.VITE_DEFAULT_LONGITUDE }}
 
       - name: Output image URLs
         run: |
