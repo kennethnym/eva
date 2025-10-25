@@ -1,7 +1,7 @@
 import { Hono } from "hono"
-import { type WeatherKitContext, weatherKitAuth } from "./weather-kit/middleware"
-import { generateWeatherDescription } from "./weather-kit/gemini"
 import { getCachedDescription, setCachedDescription } from "./weather-kit/cache"
+import { generateWeatherDescription } from "./weather-kit/gemini"
+import { type WeatherKitContext, weatherKitAuth } from "./weather-kit/middleware"
 
 const weather = new Hono<WeatherKitContext>()
 
@@ -97,38 +97,6 @@ weather.get("/hourly/:lat/:lon", async (c) => {
 	}
 })
 
-// Availability endpoint - check what datasets are available for a location
-weather.get("/availability/:lat/:lon", async (c) => {
-	const { lat, lon } = c.req.param()
-	const token = c.get("weatherKitToken")
-
-	try {
-		const url = `https://weatherkit.apple.com/api/v1/availability/${lat}/${lon}`
-		console.log(`Checking availability: ${url}`)
-		
-		const response = await fetch(url, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		})
-
-		console.log(`Availability response status: ${response.status}`)
-
-		if (!response.ok) {
-			const errorText = await response.text()
-			console.error(`Availability error:`, errorText)
-			return c.json({ error: "Failed to check availability", status: response.status }, response.status)
-		}
-
-		const data = await response.json()
-		console.log(`Availability data:`, JSON.stringify(data, null, 2))
-		return c.json(data)
-	} catch (error) {
-		console.error("Availability exception:", error)
-		return c.json({ error: String(error) }, 500)
-	}
-})
-
 // Complete weather data (all data sets)
 weather.get("/complete/:lat/:lon", async (c) => {
 	const { lat, lon } = c.req.param()
@@ -181,10 +149,10 @@ weather.get("/description/:lat/:lon", async (c) => {
 		)
 
 		if (!response.ok) {
-			return new Response(
-				JSON.stringify({ error: "Failed to fetch weather data" }),
-				{ status: response.status, headers: { "Content-Type": "application/json" } },
-			)
+			return new Response(JSON.stringify({ error: "Failed to fetch weather data" }), {
+				status: response.status,
+				headers: { "Content-Type": "application/json" },
+			})
 		}
 
 		const data = (await response.json()) as any
@@ -198,7 +166,7 @@ weather.get("/description/:lat/:lon", async (c) => {
 		// Determine if it's nighttime (between 8 PM and 6 AM)
 		const currentHour = new Date().getHours()
 		const isNighttime = currentHour >= 20 || currentHour < 6
-		
+
 		// Get tomorrow's forecast if it's nighttime
 		const tomorrow = isNighttime ? data.forecastDaily?.days?.[1] : null
 
