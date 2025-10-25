@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+bun.lock
+
+# Build outputs
+dist
+.turbo
+
+# Development files
+.git
+.gitignore
+.gitattributes
+.devcontainer
+.vscode
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.p8
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Testing
+coverage
+.nyc_output
+
+# Documentation
+README.md
+*.md
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Misc
+.editorconfig
+core.*

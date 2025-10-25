@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1
+
+# Base stage with Bun
+FROM oven/bun:1.3.1-alpine AS base
+WORKDIR /app
+
+# Install dependencies stage
+FROM base AS deps
+COPY package.json bun.lock ./
+COPY apps/backend/package.json ./apps/backend/
+COPY apps/dashboard/package.json ./apps/dashboard/
+RUN bun install --frozen-lockfile
+
+# Build dashboard stage
+FROM base AS dashboard-builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
+COPY apps/dashboard ./apps/dashboard
+COPY package.json bun.lock ./
+COPY biome.json ./
+WORKDIR /app/apps/dashboard
+RUN bun run build
+
+# Production stage
+FROM base AS production
+ENV NODE_ENV=production
+
+# Copy built dashboard
+COPY --from=dashboard-builder /app/apps/dashboard/dist /app/apps/dashboard/dist
+
+# Copy backend source (TypeScript runs directly with Bun)
+COPY apps/backend/src /app/apps/backend/src
+COPY apps/backend/package.json /app/apps/backend/
+
+# Copy backend dependencies
+COPY --from=deps /app/node_modules /app/node_modules
+COPY --from=deps /app/apps/backend/node_modules /app/apps/backend/node_modules
+
+WORKDIR /app/apps/backend
+
+EXPOSE 8000
+
+CMD ["bun", "run", "src/index.ts"]
