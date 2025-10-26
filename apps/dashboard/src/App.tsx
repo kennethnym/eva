@@ -168,14 +168,14 @@ function WeatherTile() {
 									/>
 									<div
 										className={cn(
-											"absolute flex flex-row items-center space-x-1 top-0 right-0 bg-teal-400 text-neutral-900 px-2 py-1 text-2xl font-bold rounded-r-sm translate-x-[calc(100%-1px)]",
+											"absolute flex flex-row items-center space-x-1 top-0 right-0 bg-teal-400 text-neutral-900 px-2 py-1 text-4xl font-bold rounded-r-sm translate-x-[calc(100%-1px)]",
 											percentage < 0.3
 												? "-translate-y-[calc(100%-2px)] rounded-tl-sm"
 												: "rounded-bl-sm",
 										)}
 									>
 										<p className="leading-none translate-y-px">{temperature}°</p>
-										<WeatherIcon className="size-6" strokeWidth={3} />
+										<WeatherIcon className="size-8" strokeWidth={3} />
 									</div>
 								</div>
 							)
