@@ -356,8 +356,6 @@ function SystemTile({
 				},
 			},
 		})
-
-		console.log("chartRef.current", chartRef.current)
 	}
 
 	useLayoutEffect(() => {
