@@ -194,7 +194,7 @@ function WeatherTile() {
 						)
 					})}
 				</div>
-				<div className="flex flex-col justify-start h-full space-y-2 flex-[3]">
+				<div className="flex flex-col justify-start h-full space-y-2 flex-[2]">
 					<p
 						className={cn("text-3xl leading-none tracking-tight font-light", {
 							"text-red-400": errorWeatherDescription,
