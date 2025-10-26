@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query"
 import Chart from "chart.js/auto"
-import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { beszelSystemsQuery } from "./beszel"
 import cn from "./components/lib/cn"
-import { StatusSeverity, formatLineName, getLineColor, getStatusBorderColor, tflDisruptionsQuery } from "./tfl"
+import { StatusSeverity, formatLineName, tflDisruptionsQuery } from "./tfl"
 import {
 	DEFAULT_LATITUDE,
 	DEFAULT_LONGITUDE,
@@ -377,20 +377,14 @@ function TFLDistruptionItem({ lineId, reason, severity }: { lineId: string; reas
 	return (
 		<>
 			<div className="h-full flex items-center justify-center px-2 py-0.5">
-				<p
-					className={cn(
-						"text-xl uppercase font-bold w-full text-center px-1 rounded-sm",
-						lineStyleClass,
-						statusBorderClass,
-					)}
-				>
+				<p className={cn("text-xl uppercase font-bold w-full text-center px-1 rounded-sm", lineStyleClass)}>
 					{lineName}
 				</p>
 			</div>
 			<p
 				className={cn(
 					"text-xl text-wrap text-neutral-300 leading-tight self-center pr-2 py-1 font-light border-r-4",
-					getStatusBorderColor(severity),
+					statusBorderClass,
 				)}
 			>
 				{reason}
