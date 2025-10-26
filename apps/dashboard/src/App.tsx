@@ -219,6 +219,7 @@ function TFLTile() {
 		select: (data) => {
 			data.disruptions.sort((a, b) => {
 				if (a.lineName.match(/northern/i)) return -1
+				if (b.lineName.match(/northern/i)) return 1
 				return a.statusSeverity - b.statusSeverity
 			})
 			return data
@@ -258,16 +259,19 @@ function TFLTile() {
 			className="gap-x-1 col-start-3 h-full row-start-1 col-span-2 row-span-1 grid grid-cols-[min-content_1fr] auto-rows-min overflow-y-auto"
 		>
 			{tflData.goodService.includes("Northern") && (
-				<TFLDistruptionItem lineId="northern" reason="Good service" severity={StatusSeverity.GoodService} />
+				<>
+					<TFLDistruptionItem lineId="northern" reason="Good service" severity={StatusSeverity.GoodService} />
+					<hr className="col-span-2 border-neutral-700" />
+				</>
 			)}
-			{tflData.disruptions.map((disruption) => (
+			{tflData.disruptions.map((disruption, i) => (
 				<Fragment key={disruption.lineId}>
 					<TFLDistruptionItem
 						lineId={disruption.lineId}
 						reason={disruption.reason ?? "Unknown reason"}
 						severity={disruption.statusSeverity}
 					/>
-					<hr className="col-span-2 border-neutral-700" />
+					{i < tflData.disruptions.length - 1 && <hr className="col-span-2 border-neutral-700" />}
 				</Fragment>
 			))}
 		</Tile>
@@ -276,14 +280,108 @@ function TFLTile() {
 
 function TFLDistruptionItem({ lineId, reason, severity }: { lineId: string; reason: string; severity: number }) {
 	const lineName = formatLineName(lineId)
+
+	console.log(lineId)
+	let lineStyleClass: string
+	switch (lineId) {
+		case "bakerloo":
+			lineStyleClass = "bg-amber-700"
+			break
+		case "central":
+			lineStyleClass = "bg-red-600"
+			break
+		case "circle":
+			lineStyleClass = "bg-yellow-400 text-neutral-900"
+			break
+		case "district":
+			lineStyleClass = "bg-green-600"
+			break
+		case "hammersmith-city":
+			lineStyleClass = "bg-pink-400"
+			break
+		case "jubilee":
+			lineStyleClass = "bg-slate-500"
+			break
+		case "metropolitan":
+			lineStyleClass = "bg-purple-800"
+			break
+		case "northern":
+			lineStyleClass = "bg-black"
+			break
+		case "piccadilly":
+			lineStyleClass = "bg-blue-900"
+			break
+		case "victoria":
+			lineStyleClass = "bg-sky-500"
+			break
+		case "waterloo-city":
+			lineStyleClass = "bg-teal-500"
+			break
+		case "london-overground":
+			lineStyleClass = "bg-orange-500"
+			break
+		case "dlr":
+			lineStyleClass = "bg-teal-600"
+			break
+		case "elizabeth":
+			lineStyleClass = "bg-purple-600"
+			break
+		case "tram":
+			lineStyleClass = "bg-green-500"
+			break
+		default:
+			lineStyleClass = "bg-gray-500"
+			break
+	}
+
+	let statusBorderClass: string
+	switch (severity) {
+		case StatusSeverity.GoodService:
+			statusBorderClass = "border-green-500"
+			break
+		case StatusSeverity.MinorDelays:
+			statusBorderClass = "border-yellow-500"
+			break
+		case StatusSeverity.Suspended:
+			statusBorderClass = "border-red-600"
+			break
+		case StatusSeverity.PartSuspended:
+			statusBorderClass = "border-red-500"
+			break
+		case StatusSeverity.PlannedClosure:
+			statusBorderClass = "border-orange-600"
+			break
+		case StatusSeverity.PartClosure:
+			statusBorderClass = "border-yellow-500"
+			break
+		case StatusSeverity.SevereDelays:
+			statusBorderClass = "border-red-500"
+			break
+		case StatusSeverity.ReducedService:
+			statusBorderClass = "border-orange-500"
+			break
+		case StatusSeverity.BusService:
+			statusBorderClass = "border-blue-500"
+			break
+		case StatusSeverity.Information:
+			statusBorderClass = "border-blue-400"
+			break
+		case StatusSeverity.ServiceClosed:
+			statusBorderClass = "border-red-700"
+			break
+		default:
+			statusBorderClass = "border-gray-400"
+			break
+	}
+
 	return (
 		<>
 			<div className="h-full flex items-center justify-center px-2 py-0.5">
 				<p
 					className={cn(
-						"text-xl uppercase font-bold bg-blue-500 w-full text-center px-1 rounded-sm",
-						getLineColor(lineId),
-						getStatusBorderColor(severity),
+						"text-xl uppercase font-bold w-full text-center px-1 rounded-sm",
+						lineStyleClass,
+						statusBorderClass,
 					)}
 				>
 					{lineName}

@@ -111,68 +111,6 @@ export function formatLineName(lineId: string): string {
 	return lineNames[lineId] || lineId
 }
 
-// Map of tube lines to their official TfL colors (as Tailwind classes)
-export function getLineColor(lineId: string): string {
-	const lineColors: Record<string, string> = {
-		bakerloo: "bg-amber-700",
-		central: "bg-red-600",
-		circle: "bg-yellow-400",
-		district: "bg-green-600",
-		"hammersmith-city": "bg-pink-400",
-		jubilee: "bg-slate-500",
-		metropolitan: "bg-purple-800",
-		northern: "bg-black",
-		piccadilly: "bg-blue-900",
-		victoria: "bg-sky-500",
-		"waterloo-city": "bg-teal-500",
-		"london-overground": "bg-orange-500",
-		dlr: "bg-teal-600",
-		"elizabeth-line": "bg-purple-600",
-		tram: "bg-green-500",
-	}
-	return lineColors[lineId] || "bg-gray-500"
-}
-
-// Map of status severity to border colors
-export function getStatusBorderColor(severity: number): string {
-	const borderColors: Record<number, string> = {
-		[StatusSeverity.SpecialService]: "border-gray-500",
-		[StatusSeverity.Closed]: "border-red-700",
-		[StatusSeverity.Suspended]: "border-red-600",
-		[StatusSeverity.PartSuspended]: "border-red-500",
-		[StatusSeverity.PlannedClosure]: "border-orange-600",
-		[StatusSeverity.PartClosure]: "border-yellow-500",
-		[StatusSeverity.SevereDelays]: "border-red-500",
-		[StatusSeverity.ReducedService]: "border-orange-500",
-		[StatusSeverity.BusService]: "border-blue-500",
-		[StatusSeverity.MinorDelays]: "border-yellow-500",
-		[StatusSeverity.GoodService]: "border-green-500",
-		[StatusSeverity.PartClosed]: "border-orange-600",
-		[StatusSeverity.ExitOnly]: "border-gray-600",
-		[StatusSeverity.NoStepFreeAccess]: "border-gray-500",
-		[StatusSeverity.ChangeOfFrequency]: "border-blue-400",
-		[StatusSeverity.Diverted]: "border-purple-500",
-		[StatusSeverity.NotRunning]: "border-red-600",
-		[StatusSeverity.IssuesReported]: "border-yellow-400",
-		[StatusSeverity.NoIssues]: "border-green-500",
-		[StatusSeverity.Information]: "border-blue-400",
-		[StatusSeverity.ServiceClosed]: "border-red-700",
-	}
-	return borderColors[severity] || "border-gray-400"
-}
-
-// Helper function to check if there are any disruptions
-export function hasDisruptions(data: DisruptionsResponse): boolean {
-	return data.disruptedLines > 0
-}
-
-// Helper function to get critical disruptions (severe or worse)
-export function getCriticalDisruptions(data: DisruptionsResponse): DisruptionSummary[] {
-	return data.disruptions.filter((d) => d.statusSeverity <= 6)
-}
-
-// TanStack Query Options
-
 /**
  * Query options for fetching current TfL disruptions
  * Returns disruptions across Tube, Overground, DLR, Elizabeth Line, and Tram
