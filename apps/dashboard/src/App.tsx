@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query"
 import Chart from "chart.js/auto"
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { beszelSystemsQuery } from "./beszel"
 import cn from "./components/lib/cn"
-import { StatusSeverity, formatLineName, tflDisruptionsQuery } from "./tfl"
+import { StatusSeverity, TubeLine, formatLineName, tflDisruptionsQuery } from "./tfl"
 import {
 	DEFAULT_LATITUDE,
 	DEFAULT_LONGITUDE,
@@ -15,31 +15,27 @@ import {
 
 function App() {
 	return (
-		<div className="h-screen bg-black gap-4 text-neutral-200 grid grid-cols-4 grid-rows-5 p-4">
-			<DateTimeTile />
-			<WeatherTile />
-			<TFLTile />
-			<SystemTile systemName="helian" displayName="Helian" />
-			<SystemTile systemName="akira" displayName="Akira" />
+		<div className="h-screen bg-neutral-300 dark:bg-neutral-800 p-2">
+			<div className="w-full h-full grid grid-cols-4 grid-rows-5 gap-2 bg-neutral-300 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+				<DateTimeTile />
+				<WeatherTile />
+				<SystemTile className="row-start-2 row-span-1" systemName="helian" displayName="Helian" />
+				<SystemTile className="row-start-2 row-span-1" systemName="akira" displayName="Akira" />
+				<TFLTile className="row-start-1 row-span-1" />
+				<Tile className="row-start-3 col-span-2 row-span-3" />
+			</div>
 		</div>
 	)
 }
 
-function Tile({
-	decorations = true,
-	children,
-	className,
-}: { decorations?: boolean; children: React.ReactNode; className?: string }) {
+function Tile({ children, className }: { children?: React.ReactNode; className?: string }) {
 	return (
-		<div className={cn("relative bg-neutral-900 flex flex-col justify-end items-start", className)}>
-			{decorations && (
-				<>
-					<div className="absolute top-0 left-0 w-4 h-[1px] bg-neutral-200" />
-					<div className="absolute top-0 left-0 w-[1px] h-4 bg-neutral-200" />
-					<div className="absolute bottom-0 right-0 w-4 h-[1px] bg-neutral-200" />
-					<div className="absolute bottom-0 right-0 w-[1px] h-4 bg-neutral-200" />
-				</>
+		<div
+			className={cn(
+				"relative rounded-xl bg-neutral-200 dark:bg-neutral-900 flex flex-col justify-end items-start",
+				className,
 			)}
+		>
 			{children}
 		</div>
 	)
@@ -69,8 +65,8 @@ function DateTimeTile() {
 
 	return (
 		<Tile className="col-start-1 row-start-1 col-span-2 row-span-3 p-6">
-			<p className="text-4xl mb-2 font-extralight">{formattedDate}</p>
-			<p className="text-8xl font-bold">{formattedTime}</p>
+			<p className="text-4xl mb-2 font-mono uppercase tracking-tigher">{formattedDate}</p>
+			<p className="text-8xl font-extralight tracking-tight">{formattedTime}</p>
 		</Tile>
 	)
 }
@@ -164,14 +160,14 @@ function WeatherTile() {
 									<div
 										// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 										key={index}
-										className={cn("w-10 bg-teal-400 h-[2px]")}
+										className={cn("w-10 bg-teal-500 dark:bg-teal-400 h-[2px]")}
 									/>
 									<div
 										className={cn(
-											"absolute flex flex-row items-center space-x-1 top-0 right-0 bg-teal-400 text-neutral-900 px-2 py-1 text-4xl font-bold rounded-r-sm translate-x-[calc(100%-1px)]",
+											"absolute flex flex-row items-center space-x-1 top-0 right-0 bg-teal-500 dark:bg-teal-400 text-neutral-200 dark:text-neutral-900 px-2 py-1 text-4xl font-bold rounded-r translate-x-[calc(100%-1px)]",
 											percentage < 0.3
-												? "-translate-y-[calc(100%-2px)] rounded-tl-sm"
-												: "rounded-bl-sm",
+												? "-translate-y-[calc(100%-2px)] rounded-tl"
+												: "rounded-bl",
 										)}
 									>
 										<p className="leading-none translate-y-px">{temperature}°</p>
@@ -187,7 +183,7 @@ function WeatherTile() {
 								className={cn(
 									"w-4",
 									index >= highlightIndexStart
-										? "bg-teal-400 w-8 h-[2px]"
+										? "bg-teal-500 dark:bg-teal-400 w-8 h-[2px]"
 										: "bg-neutral-400 w-4 h-[1px]",
 								)}
 							/>
@@ -209,7 +205,16 @@ function WeatherTile() {
 	)
 }
 
-function TFLTile() {
+function TFLTile({ className }: { className?: string }) {
+	const linesIDontCareAbout = [
+		TubeLine.WaterlooCity,
+		TubeLine.Windrush,
+		TubeLine.Lioness,
+		TubeLine.Lioness,
+		TubeLine.Tram,
+		TubeLine.Mildmay,
+	]
+
 	const {
 		data: tflData,
 		isLoading: isLoadingTFL,
@@ -222,6 +227,7 @@ function TFLTile() {
 				if (b.lineName.match(/northern/i)) return 1
 				return a.statusSeverity - b.statusSeverity
 			})
+			data.disruptions = data.disruptions.filter((disruption) => !linesIDontCareAbout.includes(disruption.lineId))
 			return data
 		},
 		refetchInterval: 5 * 60 * 1000, // 5 minutes
@@ -230,7 +236,9 @@ function TFLTile() {
 
 	if (isLoadingTFL) {
 		return (
-			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-1 flex flex-row justify-start items-center p-8">
+			<Tile
+				className={cn("h-full col-span-2 row-span-1 flex flex-row justify-start items-center p-8", className)}
+			>
 				<p className="text-2xl font-light animate-pulse">Loading tube status</p>
 			</Tile>
 		)
@@ -238,7 +246,9 @@ function TFLTile() {
 
 	if (errorTFL) {
 		return (
-			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-1 flex flex-row justify-start items-center p-8">
+			<Tile
+				className={cn("h-full col-span-2 row-span-1 flex flex-row justify-start items-center p-8", className)}
+			>
 				<p className="text-2xl font-light text-red-400">Error loading from TfL</p>
 				<p className="text-neutral-400">{errorTFL?.message}</p>
 			</Tile>
@@ -247,7 +257,9 @@ function TFLTile() {
 
 	if (!tflData) {
 		return (
-			<Tile className="col-start-3 h-full row-start-1 col-span-2 row-span-1 flex flex-row justify-start items-center p-8">
+			<Tile
+				className={cn("h-full col-span-2 row-span-1 flex flex-row justify-start items-center p-8", className)}
+			>
 				<p className="text-2xl font-light">No TfL data available</p>
 			</Tile>
 		)
@@ -255,33 +267,33 @@ function TFLTile() {
 
 	return (
 		<Tile
-			decorations={false}
-			className="gap-x-1 col-start-3 h-full row-start-1 col-span-2 row-span-1 grid grid-cols-[min-content_1fr] auto-rows-min overflow-y-auto"
+			className={cn(
+				"gap-x-1 pt-1 h-full col-span-2 row-span-1 grid grid-cols-[min-content_1fr] auto-rows-min overflow-y-auto",
+				className,
+			)}
 		>
 			{tflData.goodService.includes("Northern") && (
-				<>
-					<TFLDistruptionItem lineId="northern" reason="Good service" severity={StatusSeverity.GoodService} />
-					<hr className="col-span-2 border-neutral-700" />
-				</>
+				<TFLDistruptionItem
+					lineId={TubeLine.Northern}
+					reason="Good service"
+					severity={StatusSeverity.GoodService}
+				/>
 			)}
-			{tflData.disruptions.map((disruption, i) => (
-				<Fragment key={disruption.lineId}>
-					<TFLDistruptionItem
-						lineId={disruption.lineId}
-						reason={disruption.reason ?? "Unknown reason"}
-						severity={disruption.statusSeverity}
-					/>
-					{i < tflData.disruptions.length - 1 && <hr className="col-span-2 border-neutral-700" />}
-				</Fragment>
+			{tflData.disruptions.map((disruption) => (
+				<TFLDistruptionItem
+					key={disruption.lineId}
+					lineId={disruption.lineId}
+					reason={disruption.reason ?? "Unknown reason"}
+					severity={disruption.statusSeverity}
+				/>
 			))}
 		</Tile>
 	)
 }
 
-function TFLDistruptionItem({ lineId, reason, severity }: { lineId: string; reason: string; severity: number }) {
+function TFLDistruptionItem({ lineId, reason, severity }: { lineId: TubeLine; reason: string; severity: number }) {
 	const lineName = formatLineName(lineId)
 
-	console.log(lineId)
 	let lineStyleClass: string
 	switch (lineId) {
 		case "bakerloo":
@@ -377,13 +389,18 @@ function TFLDistruptionItem({ lineId, reason, severity }: { lineId: string; reas
 	return (
 		<>
 			<div className="h-full flex items-center justify-center px-2 py-0.5">
-				<p className={cn("text-xl uppercase font-bold w-full text-center px-1 rounded-sm", lineStyleClass)}>
+				<p
+					className={cn(
+						"text-neutral-200 text-xl uppercase font-bold w-full text-center px-1 rounded-lg",
+						lineStyleClass,
+					)}
+				>
 					{lineName}
 				</p>
 			</div>
 			<p
 				className={cn(
-					"text-xl text-wrap text-neutral-300 leading-tight self-center pr-2 py-1 font-light border-r-4",
+					"text-xl text-wrap leading-tight self-center pr-2 py-1.5 font-light border-r-4",
 					statusBorderClass,
 				)}
 			>
@@ -470,17 +487,14 @@ function SystemTile({
 
 	if (!beszelSystemsData) {
 		return (
-			<Tile className={cn("h-full row-start-2 flex flex-row justify-start items-center p-8", className)}>
+			<Tile className={cn("h-full flex flex-row justify-start items-center p-8", className)}>
 				<p className="text-2xl font-light">No system status available</p>
 			</Tile>
 		)
 	}
 
 	return (
-		<Tile
-			decorations={false}
-			className={cn("h-full row-start-2 flex flex-col justify-start items-start", className)}
-		>
+		<Tile className={cn("h-full flex flex-col justify-start items-start", className)}>
 			<div className="grid grid-cols-6 px-4 pt-3 w-full">
 				<div className="col-span-3 flex flex-row items-center space-x-2">
 					<p className="text-2xl">{displayName}</p>

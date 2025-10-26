@@ -9,7 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
 // Disruption Summary
 export interface DisruptionSummary {
-	lineId: string
+	lineId: TubeLine
 	lineName: string
 	mode: string
 	status: string
@@ -53,6 +53,27 @@ export enum StatusSeverity {
 	ServiceClosed = 20,
 }
 
+export enum TubeLine {
+	Bakerloo = "bakerloo",
+	Central = "central",
+	Circle = "circle",
+	District = "district",
+	HammersmithCity = "hammersmith-city",
+	Jubilee = "jubilee",
+	Metropolitan = "metropolitan",
+	Northern = "northern",
+	Piccadilly = "piccadilly",
+	Victoria = "victoria",
+	WaterlooCity = "waterloo-city",
+	LondonOverground = "london-overground",
+	DLR = "dlr",
+	Elizabeth = "elizabeth",
+	Tram = "tram",
+	Lioness = "lioness",
+	Windrush = "windrush",
+	Mildmay = "mildmay",
+}
+
 // Helper function to get severity color
 export function getSeverityColor(severity: number): string {
 	if (severity >= 10) return "green" // Good Service
@@ -90,25 +111,25 @@ export function getSeverityLabel(severity: number): string {
 }
 
 // Helper function to format line name for display
-export function formatLineName(lineId: string): string {
-	const lineNames: Record<string, string> = {
-		bakerloo: "Bakerloo",
-		central: "Central",
-		circle: "Circle",
-		district: "District",
-		"hammersmith-city": "H&C",
-		jubilee: "Jubilee",
-		metropolitan: "Metropolitan",
-		northern: "Northern",
-		piccadilly: "Piccadilly",
-		victoria: "Victoria",
-		"waterloo-city": "W&C",
-		"london-overground": "London Overground",
-		dlr: "DLR",
-		"elizabeth-line": "Elizabeth Line",
-		tram: "Tram",
+export function formatLineName(line: TubeLine): string {
+	const lineNames: Record<TubeLine, string> = {
+		[TubeLine.Bakerloo]: "Bakerloo",
+		[TubeLine.Central]: "Central",
+		[TubeLine.Circle]: "Circle",
+		[TubeLine.District]: "District",
+		[TubeLine.HammersmithCity]: "H&C",
+		[TubeLine.Jubilee]: "Jubilee",
+		[TubeLine.Metropolitan]: "Met",
+		[TubeLine.Northern]: "Northern",
+		[TubeLine.Piccadilly]: "Piccadilly",
+		[TubeLine.Victoria]: "Victoria",
+		[TubeLine.WaterlooCity]: "W&C",
+		[TubeLine.LondonOverground]: "London Overground",
+		[TubeLine.DLR]: "DLR",
+		[TubeLine.Elizabeth]: "Lizzie",
+		[TubeLine.Tram]: "Tram",
 	}
-	return lineNames[lineId] || lineId
+	return lineNames[line] || line
 }
 
 /**
