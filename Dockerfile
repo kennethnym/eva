@@ -9,6 +9,8 @@ FROM base AS deps
 COPY package.json bun.lock ./
 COPY apps/backend/package.json ./apps/backend/
 COPY apps/dashboard/package.json ./apps/dashboard/
+COPY packages/jrpc/package.json ./packages/jrpc/
+COPY packages/zigbee/package.json ./packages/zigbee/
 RUN bun install --frozen-lockfile
 
 # Build dashboard stage
@@ -27,6 +29,8 @@ ENV VITE_DEFAULT_LONGITUDE=${VITE_DEFAULT_LONGITUDE}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
 COPY apps/dashboard ./apps/dashboard
+COPY packages/jrpc ./packages/jrpc
+COPY packages/zigbee ./packages/zigbee
 COPY package.json bun.lock ./
 COPY biome.json ./
 WORKDIR /app/apps/dashboard
@@ -42,6 +46,10 @@ COPY --from=dashboard-builder /app/apps/dashboard/dist /app/apps/dashboard/dist
 # Copy backend source (TypeScript runs directly with Bun)
 COPY apps/backend/src /app/apps/backend/src
 COPY apps/backend/package.json /app/apps/backend/
+
+# Copy workspace packages
+COPY packages/jrpc /app/packages/jrpc
+COPY packages/zigbee /app/packages/zigbee
 
 # Copy backend dependencies
 COPY --from=deps /app/node_modules /app/node_modules
