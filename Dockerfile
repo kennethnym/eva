@@ -17,12 +17,12 @@ RUN bun install --frozen-lockfile
 FROM base AS dashboard-builder
 
 # Accept build arguments for Vite environment variables
-ARG VITE_API_URL
+ARG VITE_API_HOST
 ARG VITE_DEFAULT_LATITUDE
 ARG VITE_DEFAULT_LONGITUDE
 
 # Set as environment variables for Vite build
-ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_API_HOST=${VITE_API_HOST}
 ENV VITE_DEFAULT_LATITUDE=${VITE_DEFAULT_LATITUDE}
 ENV VITE_DEFAULT_LONGITUDE=${VITE_DEFAULT_LONGITUDE}
 
