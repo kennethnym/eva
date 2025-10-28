@@ -1,5 +1,9 @@
+import type { JrpcRequest, JrpcResponse } from "@eva/jrpc"
+import { ZIGBEE_DEVICE, type ZigbeeDeviceName } from "@eva/zigbee"
 import { useQuery } from "@tanstack/react-query"
+import { useDrag } from "@use-gesture/react"
 import Chart from "chart.js/auto"
+import { atom, useAtomValue, useSetAtom, useStore } from "jotai"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { beszelSystemsQuery } from "./beszel"
 import cn from "./components/lib/cn"
@@ -13,16 +17,84 @@ import {
 	weatherDescriptionQuery,
 } from "./weather"
 
+const brightnessAtoms = atom({
+	[ZIGBEE_DEVICE.deskLamp]: atom(0),
+	[ZIGBEE_DEVICE.livingRoomFloorLamp]: atom(0),
+})
+
+const intermediateBrightnessAtoms = atom({
+	[ZIGBEE_DEVICE.deskLamp]: atom(-1),
+	[ZIGBEE_DEVICE.livingRoomFloorLamp]: atom(-1),
+})
+
 function App() {
+	const websocket = useRef(new WebSocket(`ws://${import.meta.env.VITE_API_HOST}/api/zigbee`))
+
+	const store = useStore()
+
+	useEffect(() => {
+		websocket.current.onmessage = (event) => {
+			const data = JSON.parse(event.data) as JrpcRequest | JrpcResponse
+			if ("method" in data) {
+				switch (data.method) {
+					case "showDeviceState": {
+						const { deviceName, state } = data.params
+						const brightnessAtom = store.get(brightnessAtoms)[deviceName]
+						store.set(brightnessAtom, Math.round((state.brightness / 254) * 100))
+					}
+				}
+			}
+		}
+		return () => {
+			if (websocket.current.readyState === WebSocket.OPEN) {
+				websocket.current.close()
+			}
+		}
+	}, [store])
+
+	function setBrightness(deviceName: ZigbeeDeviceName, brightness: number) {
+		const request: JrpcRequest<"setDeviceState"> = {
+			id: crypto.randomUUID(),
+			jsonrpc: "2.0",
+			method: "setDeviceState",
+			params: {
+				deviceName,
+				state:
+					brightness === 0
+						? { state: "OFF", brightness: 0 }
+						: { state: "ON", brightness: Math.round((brightness / 100) * 254) },
+			},
+		}
+		websocket.current.send(JSON.stringify(request))
+	}
+
 	return (
-		<div className="h-screen bg-neutral-300 dark:bg-neutral-800 p-2">
+		<div className="h-screen bg-neutral-300 dark:bg-neutral-800 p-2 select-none">
 			<div className="w-full h-full grid grid-cols-4 grid-rows-5 gap-2 bg-neutral-300 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
 				<DateTimeTile />
 				<WeatherTile />
+
+				<TFLTile className="row-start-1 row-span-1" />
+
 				<SystemTile className="row-start-2 row-span-1" systemName="helian" displayName="Helian" />
 				<SystemTile className="row-start-2 row-span-1" systemName="akira" displayName="Akira" />
-				<TFLTile className="row-start-1 row-span-1" />
-				<Tile className="row-start-3 col-span-2 row-span-3" />
+
+				<LightControlTile
+					className="row-start-3 col-start-3 col-span-1"
+					deviceName={ZIGBEE_DEVICE.livingRoomFloorLamp}
+					onRequestBrightnessChange={(brightness) => {
+						setBrightness(ZIGBEE_DEVICE.livingRoomFloorLamp, brightness)
+					}}
+				/>
+				<LightControlTile
+					className="row-start-3 col-start-4 col-span-1"
+					deviceName={ZIGBEE_DEVICE.deskLamp}
+					onRequestBrightnessChange={(brightness) => {
+						setBrightness(ZIGBEE_DEVICE.deskLamp, brightness)
+					}}
+				/>
+
+				<Tile className="row-start-4 col-span-2 row-span-3" />
 			</div>
 		</div>
 	)
@@ -517,6 +589,186 @@ function SystemTile({
 				<canvas ref={onCanvasRef} className="min-h-0 absolute top-0 left-0 w-full h-full" />
 			</div>
 		</Tile>
+	)
+}
+
+function LightControlTile({
+	deviceName,
+	className,
+	onRequestBrightnessChange,
+}: { deviceName: ZigbeeDeviceName; className?: string; onRequestBrightnessChange: (brightness: number) => void }) {
+	const BAR_COUNT = 44
+
+	const currentBrightness = useAtomValue(useAtomValue(brightnessAtoms)[deviceName])
+	const initialHighlightIndexStart = Math.floor((1 - currentBrightness / 100) * BAR_COUNT)
+	const touchContainerRef = useRef<HTMLDivElement | null>(null)
+	const barRefs = useRef<(HTMLDivElement | null)[]>(Array.from({ length: BAR_COUNT }, () => null))
+	const setIntermediateBrightness = useSetAtom(useAtomValue(intermediateBrightnessAtoms)[deviceName])
+	const store = useStore()
+
+	const bind = useDrag(({ xy: [x], first, last }) => {
+		if (!touchContainerRef.current) return
+
+		if (!first) {
+			touchContainerRef.current.dataset.active = "true"
+		}
+
+		if (last) {
+			delete touchContainerRef.current.dataset.active
+			for (let i = 0; i < BAR_COUNT; i++) {
+				const bar = barRefs.current[i]
+				if (!bar) continue
+
+				if (bar.dataset.touched === "true") {
+					bar.dataset.thumb = "true"
+				}
+
+				bar.dataset.touched = "false"
+				delete bar.dataset.touchProximity
+			}
+
+			const intermediateBrightness = store.get(store.get(intermediateBrightnessAtoms)[deviceName])
+			if (intermediateBrightness !== -1) {
+				onRequestBrightnessChange(intermediateBrightness)
+				setIntermediateBrightness(-1)
+			}
+		} else {
+			let touchedIndex = -1
+			for (let i = 0; i < BAR_COUNT; i++) {
+				const bar = barRefs.current[i]
+				if (!bar) continue
+
+				const barRect = bar.getBoundingClientRect()
+
+				delete bar.dataset.thumb
+
+				if (x > barRect.left - 2 && x < barRect.right + 2) {
+					touchedIndex = i
+
+					bar.dataset.touched = "true"
+					bar.dataset.highlighted = "true"
+					delete bar.dataset.touchProximity
+
+					const brightness = 1 - i / BAR_COUNT
+					setIntermediateBrightness(Math.round(brightness * 100))
+
+					if (barRefs.current[i - 1]) {
+						barRefs.current[i - 1]!.dataset.touchProximity = "close"
+					}
+					if (barRefs.current[i - 2]) {
+						barRefs.current[i - 2]!.dataset.touchProximity = "medium"
+					}
+					if (barRefs.current[i - 3]) {
+						barRefs.current[i - 3]!.dataset.touchProximity = "far"
+					}
+				} else if (barRect.left < x) {
+					bar.dataset.touched = "false"
+					bar.dataset.highlighted = "true"
+					if (touchedIndex >= 0) {
+						const diff = i - touchedIndex
+						if (diff === 1) {
+							bar.dataset.touchProximity = "close"
+						} else if (diff === 2) {
+							bar.dataset.touchProximity = "medium"
+						} else if (diff === 3) {
+							bar.dataset.touchProximity = "far"
+						} else {
+							delete bar.dataset.touchProximity
+						}
+					} else {
+						delete bar.dataset.touchProximity
+					}
+				} else if (barRect.right > x) {
+					bar.dataset.highlighted = "false"
+					bar.dataset.touched = "false"
+					if (touchedIndex >= 0) {
+						const diff = i - touchedIndex
+						if (diff === 1) {
+							bar.dataset.touchProximity = "close"
+						} else if (diff === 2) {
+							bar.dataset.touchProximity = "medium"
+						} else if (diff === 3) {
+							bar.dataset.touchProximity = "far"
+						} else {
+							delete bar.dataset.touchProximity
+						}
+					} else {
+						delete bar.dataset.touchProximity
+					}
+				} else {
+					bar.dataset.touched = "false"
+					bar.dataset.highlighted = "false"
+					delete bar.dataset.touchProximity
+				}
+			}
+
+			if (touchedIndex === -1) {
+				const firstElement = barRefs.current[barRefs.current.length - 1]
+				const lastElement = barRefs.current[0]
+				if (lastElement && x > lastElement.getBoundingClientRect().right) {
+					lastElement.dataset.thumb = "true"
+					setIntermediateBrightness(100)
+				} else if (firstElement && x < firstElement.getBoundingClientRect().left) {
+					setIntermediateBrightness(0)
+				}
+			}
+		}
+	})
+
+	return (
+		<Tile className={cn("h-full flex flex-col justify-start items-start", className)}>
+			<div
+				{...bind()}
+				ref={touchContainerRef}
+				className="group flex-1 flex flex-row-reverse justify-center items-center touch-none gap-x-1 w-full translate-y-6"
+			>
+				{Array.from({ length: BAR_COUNT }).map((_, index) => {
+					const highlighted = index >= initialHighlightIndexStart
+					return (
+						<div
+							data-highlighted={highlighted}
+							data-thumb={index === initialHighlightIndexStart}
+							data-touched={false}
+							ref={(ref) => {
+								barRefs.current[index] = ref
+							}}
+							// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+							key={index}
+							className="transition-all group-data-[active=true]:transition-none w-[2px] h-[2px] bg-neutral-400 rounded-full data-[highlighted=true]:h-2 data-[touch-proximity=close]:h-6 data-[touch-proximity=medium]:h-4 data-[touch-proximity=far]:h-2 data-[highlighted=true]:bg-teal-500 data-[touched=true]:h-8 data-[touched=true]:w-1 data-[thumb=true]:h-8"
+						/>
+					)
+				})}
+			</div>
+			<div className="px-4 pb-2 w-full flex flex-row items-center justify-center space-x-2">
+				<p className="tracking-tigher uppercase">Desk light</p>
+				<BrightnessLevelLabel deviceName={deviceName} />
+			</div>
+		</Tile>
+	)
+}
+
+function BrightnessLevelLabel({ deviceName }: { deviceName: ZigbeeDeviceName }) {
+	const currentBrightness = useAtomValue(useAtomValue(brightnessAtoms)[deviceName])
+	const intermediateBrightness = useAtomValue(useAtomValue(intermediateBrightnessAtoms)[deviceName])
+
+	const brightness = intermediateBrightness === -1 ? currentBrightness : intermediateBrightness
+
+	let label: string
+	if (brightness === 0) {
+		label = "OFF"
+	} else {
+		label = `${brightness}%`
+	}
+
+	return (
+		<p
+			className={cn(
+				"flex-1 text-right font-bold font-mono tracking-tigher",
+				brightness === 0 ? "text-neutral-400" : "text-teal-400",
+			)}
+		>
+			{label}
+		</p>
 	)
 }
 

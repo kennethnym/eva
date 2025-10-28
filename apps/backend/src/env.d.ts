@@ -8,5 +8,9 @@ declare namespace NodeJS {
 		BESZEL_HOST?: string
 		BESZEL_EMAIL?: string
 		BESZEL_PASSWORD?: string
+		MQTT_HOST: string
+		MQTT_PORT: number
+		MQTT_USERNAME: string
+		MQTT_PASSWORD: string
 	}
 }

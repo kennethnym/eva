@@ -1,0 +1,14 @@
+{
+	"name": "@eva/jrpc",
+	"module": "index.ts",
+	"type": "module",
+	"dependencies": {
+		"@eva/zigbee": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
+}

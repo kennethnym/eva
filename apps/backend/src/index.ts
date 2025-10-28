@@ -1,10 +1,19 @@
 import { Hono } from "hono"
+import { serveStatic, websocket } from "hono/bun"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
-import { serveStatic } from "hono/bun"
-import weather from "./weather"
-import tfl from "./tfl"
 import beszel from "./beszel"
+import { createMqttClient } from "./mqtt"
+import tfl from "./tfl"
+import weather from "./weather"
+import zigbee from "./zigbee/routes"
+
+const mqtt = await createMqttClient({
+	host: process.env.MQTT_HOST,
+	port: process.env.MQTT_PORT,
+	username: process.env.MQTT_USERNAME,
+	password: process.env.MQTT_PASSWORD,
+})
 
 const app = new Hono()
 
@@ -24,6 +33,9 @@ app.route("/api/tfl", tfl)
 // Mount Beszel routes
 app.route("/api/beszel", beszel)
 
+// Mount Zigbee routes
+app.route("/api/zigbee", zigbee(mqtt))
+
 // Serve static files from dashboard build
 app.use("/*", serveStatic({ root: "../dashboard/dist" }))
 
@@ -33,4 +45,5 @@ app.get("*", serveStatic({ path: "../dashboard/dist/index.html" }))
 export default {
 	port: 8000,
 	fetch: app.fetch,
+	websocket,
 }

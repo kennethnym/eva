@@ -26,7 +26,7 @@ import {
 	Wind,
 } from "lucide-react"
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000"
+const API_BASE_URL = `http://${import.meta.env.VITE_API_HOST || "localhost:3000"}`
 
 export const DEFAULT_LATITUDE = Number(import.meta.env.VITE_DEFAULT_LATITUDE) || 37.7749
 export const DEFAULT_LONGITUDE = Number(import.meta.env.VITE_DEFAULT_LONGITUDE) || -122.4194

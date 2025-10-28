@@ -2,7 +2,7 @@
 	"name": "monorepo",
 	"version": "1.0.0",
 	"private": true,
-	"workspaces": ["apps/*"],
+	"workspaces": ["apps/*", "packages/*"],
 	"scripts": {
 		"dev": "bun run --elide-lines 0 --filter './apps/*' dev",
 		"build": "bun run --filter '*' build",
