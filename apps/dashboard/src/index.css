@@ -10,3 +10,7 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 	overscroll-behavior: none;
 }
+
+input[type="range"].brightness-slider {
+	@apply appearance-none w-full bg-transparent;
+}

@@ -28,12 +28,28 @@ const intermediateBrightnessAtoms = atom({
 })
 
 function App() {
-	const websocket = useRef(new WebSocket(`ws://${import.meta.env.VITE_API_HOST}/api/zigbee`))
+	const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+	const wsHost = import.meta.env.VITE_API_HOST || window.location.host
+	const websocket = useRef(new WebSocket(`${wsProtocol}//${wsHost}/api/zigbee`))
 
 	const store = useStore()
 
 	useEffect(() => {
-		websocket.current.onmessage = (event) => {
+		const ws = websocket.current
+
+		ws.onopen = () => {
+			console.log("WebSocket connected")
+		}
+
+		ws.onerror = (error) => {
+			console.error("WebSocket error:", error)
+		}
+
+		ws.onclose = () => {
+			console.log("WebSocket disconnected")
+		}
+
+		ws.onmessage = (event) => {
 			const data = JSON.parse(event.data) as JrpcRequest | JrpcResponse
 			if ("method" in data) {
 				switch (data.method) {
@@ -45,14 +61,22 @@ function App() {
 				}
 			}
 		}
+
 		return () => {
-			if (websocket.current.readyState === WebSocket.OPEN) {
-				websocket.current.close()
+			if (ws.readyState === WebSocket.OPEN) {
+				ws.close()
 			}
 		}
 	}, [store])
 
 	function setBrightness(deviceName: ZigbeeDeviceName, brightness: number) {
+		const ws = websocket.current
+
+		if (ws.readyState !== WebSocket.OPEN) {
+			console.warn("WebSocket is not open. Current state:", ws.readyState)
+			return
+		}
+
 		const request: JrpcRequest<"setDeviceState"> = {
 			id: crypto.randomUUID(),
 			jsonrpc: "2.0",
@@ -65,7 +89,9 @@ function App() {
 						: { state: "ON", brightness: Math.round((brightness / 100) * 254) },
 			},
 		}
-		websocket.current.send(JSON.stringify(request))
+
+		ws.send(JSON.stringify(request))
+		console.log("Sent brightness change:", { deviceName, brightness })
 	}
 
 	return (

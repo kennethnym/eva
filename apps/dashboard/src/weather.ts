@@ -26,7 +26,13 @@ import {
 	Wind,
 } from "lucide-react"
 
-const API_BASE_URL = `http://${import.meta.env.VITE_API_HOST || "localhost:3000"}`
+const getApiBaseUrl = () => {
+	const protocol = window.location.protocol
+	const host = import.meta.env.VITE_API_HOST || window.location.host
+	return `${protocol}//${host}`
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 export const DEFAULT_LATITUDE = Number(import.meta.env.VITE_DEFAULT_LATITUDE) || 37.7749
 export const DEFAULT_LONGITUDE = Number(import.meta.env.VITE_DEFAULT_LONGITUDE) || -122.4194

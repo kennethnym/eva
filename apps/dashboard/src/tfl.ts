@@ -5,7 +5,13 @@
 
 import { queryOptions } from "@tanstack/react-query"
 
-const API_BASE_URL = `http://${import.meta.env.VITE_API_HOST || "localhost:8000"}`
+const getApiBaseUrl = () => {
+	const protocol = window.location.protocol
+	const host = import.meta.env.VITE_API_HOST || window.location.host
+	return `${protocol}//${host}`
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 // Disruption Summary
 export interface DisruptionSummary {
