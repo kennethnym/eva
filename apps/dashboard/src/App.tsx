@@ -621,9 +621,12 @@ function LightControlTile({
 
 				if (bar.dataset.touched === "true") {
 					bar.dataset.thumb = "true"
+				} else {
+					bar.dataset.thumb = "false"
 				}
 
 				bar.dataset.touched = "false"
+
 				delete bar.dataset.touchProximity
 			}
 
@@ -642,11 +645,11 @@ function LightControlTile({
 
 				delete bar.dataset.thumb
 
-				if (x > barRect.left - 2 && x < barRect.right + 2) {
+				if (x > barRect.left - 2 && x < barRect.right + 2 && touchedIndex === -1) {
 					touchedIndex = i
 
 					bar.dataset.touched = "true"
-					bar.dataset.highlighted = "true"
+					bar.dataset.highlighted = "false"
 					delete bar.dataset.touchProximity
 
 					const brightness = 1 - i / BAR_COUNT
@@ -662,6 +665,11 @@ function LightControlTile({
 						barRefs.current[i - 3]!.dataset.touchProximity = "far"
 					}
 				} else if (barRect.left < x) {
+					if (bar.dataset.touched === "true") {
+						bar.dataset.prevTouched = "true"
+					} else {
+						delete bar.dataset.prevTouched
+					}
 					bar.dataset.touched = "false"
 					bar.dataset.highlighted = "true"
 					if (touchedIndex >= 0) {
@@ -734,7 +742,7 @@ function LightControlTile({
 							}}
 							// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 							key={index}
-							className="transition-all group-data-[active=true]:transition-none w-[2px] h-[2px] bg-neutral-400 rounded-full data-[highlighted=true]:h-2 data-[touch-proximity=close]:h-6 data-[touch-proximity=medium]:h-4 data-[touch-proximity=far]:h-2 data-[highlighted=true]:bg-teal-500 data-[touched=true]:h-8 data-[touched=true]:w-1 data-[thumb=true]:h-8"
+							className="transition-all transition-75 w-[2px] h-[2px] bg-neutral-400 rounded-full data-[highlighted=true]:h-2 data-[touch-proximity=close]:h-6 data-[touch-proximity=medium]:h-4 data-[touch-proximity=far]:h-2 data-[highlighted=true]:bg-teal-500 data-[touched=true]:h-8 data-[touched=true]:w-1 data-[touched=true]:bg-teal-500 data-[touched=true]:transition-none data-[prev-touched=true]:transition-none data-[thumb=true]:h-8 data-[thumb=true]:bg-teal-500"
 						/>
 					)
 				})}
