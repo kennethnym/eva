@@ -51,7 +51,9 @@ COPY apps/backend/package.json /app/apps/backend/
 
 # Copy workspace packages
 COPY packages/jrpc /app/packages/jrpc
+COPY packages/jrpc/node_modules /app/packages/jrpc/node_modules
 COPY packages/zigbee /app/packages/zigbee
+COPY packages/zigbee/node_modules /app/packages/zigbee/node_modules
 
 # Copy backend dependencies
 COPY --from=deps /app/node_modules /app/node_modules
