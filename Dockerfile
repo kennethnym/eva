@@ -28,6 +28,8 @@ ENV VITE_DEFAULT_LONGITUDE=${VITE_DEFAULT_LONGITUDE}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
+COPY --from=deps /app/packages/jrpc/node_modules ./packages/jrpc/node_modules
+COPY --from=deps /app/packages/zigbee/node_modules ./packages/zigbee/node_modules
 COPY apps/dashboard ./apps/dashboard
 COPY packages/jrpc ./packages/jrpc
 COPY packages/zigbee ./packages/zigbee
