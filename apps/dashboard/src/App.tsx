@@ -17,15 +17,35 @@ import {
 	weatherDescriptionQuery,
 } from "./weather"
 
-const brightnessAtoms = atom({
+const LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT = 44
+
+// Store brightness as step (0-43) to match the 44 bars exactly
+// Step 0 = OFF, Steps 1-43 map to bars 42-0
+const brightnessStepAtoms = atom({
 	[ZIGBEE_DEVICE.deskLamp]: atom(0),
 	[ZIGBEE_DEVICE.livingRoomFloorLamp]: atom(0),
 })
 
-const intermediateBrightnessAtoms = atom({
+const intermediateBrightnessStepAtoms = atom({
 	[ZIGBEE_DEVICE.deskLamp]: atom(-1),
 	[ZIGBEE_DEVICE.livingRoomFloorLamp]: atom(-1),
 })
+
+// Convert brightness (0-254) to step (0-43)
+// Step 0 = brightness 0, steps 1-43 map to brightness 1-254
+function brightnessToStep(brightness: number): number {
+	if (brightness === 0) return 0
+	// Map brightness 1-254 to steps 1-43
+	return Math.max(1, Math.round((brightness / 254) * (LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1)))
+}
+
+// Convert step (0-43) to brightness (0-254)
+// Step 0 = brightness 0, steps 1-43 map to brightness 1-254
+function stepToBrightness(step: number): number {
+	if (step === 0) return 0
+	// Map steps 1-43 to brightness 1-254
+	return Math.max(1, Math.round((step / (LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1)) * 254))
+}
 
 const DEVICE_FRIENDLY_NAMES = {
 	[ZIGBEE_DEVICE.deskLamp]: "Desk Lamp",
@@ -60,8 +80,8 @@ function App() {
 				switch (data.method) {
 					case "showDeviceState": {
 						const { deviceName, state } = data.params
-						const brightnessAtom = store.get(brightnessAtoms)[deviceName]
-						store.set(brightnessAtom, Math.round((state.brightness / 254) * 100))
+						const brightnessStepAtom = store.get(brightnessStepAtoms)[deviceName]
+						store.set(brightnessStepAtom, brightnessToStep(state.brightness))
 					}
 				}
 			}
@@ -74,7 +94,7 @@ function App() {
 		}
 	}, [store])
 
-	function setBrightness(deviceName: ZigbeeDeviceName, brightness: number) {
+	function setBrightnessStep(deviceName: ZigbeeDeviceName, step: number) {
 		const ws = websocket.current
 
 		if (ws.readyState !== WebSocket.OPEN) {
@@ -82,16 +102,15 @@ function App() {
 			return
 		}
 
+		const brightness = stepToBrightness(step)
+
 		const req: JrpcRequest<"setDeviceState"> = {
 			id: newJrpcRequestId(),
 			jsonrpc: "2.0",
 			method: "setDeviceState",
 			params: {
 				deviceName,
-				state:
-					brightness === 0
-						? { state: "OFF", brightness: 0 }
-						: { state: "ON", brightness: Math.round((brightness / 100) * 254) },
+				state: step === 0 ? { state: "OFF", brightness: 0 } : { state: "ON", brightness },
 			},
 		}
 
@@ -112,15 +131,15 @@ function App() {
 				<LightControlTile
 					className="row-start-3 col-start-3 col-span-1"
 					deviceName={ZIGBEE_DEVICE.livingRoomFloorLamp}
-					onRequestBrightnessChange={(brightness) => {
-						setBrightness(ZIGBEE_DEVICE.livingRoomFloorLamp, brightness)
+					onRequestBrightnessStepChange={(step) => {
+						setBrightnessStep(ZIGBEE_DEVICE.livingRoomFloorLamp, step)
 					}}
 				/>
 				<LightControlTile
 					className="row-start-3 col-start-4 col-span-1"
 					deviceName={ZIGBEE_DEVICE.deskLamp}
-					onRequestBrightnessChange={(brightness) => {
-						setBrightness(ZIGBEE_DEVICE.deskLamp, brightness)
+					onRequestBrightnessStepChange={(step) => {
+						setBrightnessStep(ZIGBEE_DEVICE.deskLamp, step)
 					}}
 				/>
 
@@ -625,16 +644,29 @@ function SystemTile({
 function LightControlTile({
 	deviceName,
 	className,
-	onRequestBrightnessChange,
-}: { deviceName: ZigbeeDeviceName; className?: string; onRequestBrightnessChange: (brightness: number) => void }) {
-	const BAR_COUNT = 44
-
-	const currentBrightness = useAtomValue(useAtomValue(brightnessAtoms)[deviceName])
-	const initialHighlightIndexStart = Math.floor((1 - currentBrightness / 100) * BAR_COUNT)
+	onRequestBrightnessStepChange,
+}: { deviceName: ZigbeeDeviceName; className?: string; onRequestBrightnessStepChange: (step: number) => void }) {
+	const currentBrightnessStep = useAtomValue(useAtomValue(brightnessStepAtoms)[deviceName])
+	// Map step to bar index for thumb position
+	// Step 0 = OFF (no thumb shown, set to invalid index)
+	// Step 1-43 map to bars 42-0
+	const initialHighlightIndexStart =
+		currentBrightnessStep === 0
+			? LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1 // No thumb (index out of range, but no bars highlighted)
+			: LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1 - currentBrightnessStep
 	const touchContainerRef = useRef<HTMLDivElement | null>(null)
-	const barRefs = useRef<(HTMLDivElement | null)[]>(Array.from({ length: BAR_COUNT }, () => null))
-	const setIntermediateBrightness = useSetAtom(useAtomValue(intermediateBrightnessAtoms)[deviceName])
+	const barRefs = useRef<(HTMLDivElement | null)[]>(
+		Array.from({ length: LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT }, () => null),
+	)
+	const setIntermediateBrightnessStep = useSetAtom(useAtomValue(intermediateBrightnessStepAtoms)[deviceName])
 	const store = useStore()
+
+	useEffect(() => {
+		const brightnessStepAtom = store.get(brightnessStepAtoms)[deviceName]
+		if (store.get(brightnessStepAtom) === currentBrightnessStep) {
+			setIntermediateBrightnessStep(-1)
+		}
+	}, [currentBrightnessStep, deviceName, setIntermediateBrightnessStep, store])
 
 	const bind = useDrag(({ xy: [x], first, last }) => {
 		if (!touchContainerRef.current) return
@@ -645,29 +677,48 @@ function LightControlTile({
 
 		if (last) {
 			delete touchContainerRef.current.dataset.active
-			for (let i = 0; i < BAR_COUNT; i++) {
+			let thumbIndex = -1
+			for (let i = 0; i < LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT; i++) {
 				const bar = barRefs.current[i]
 				if (!bar) continue
 
-				if (bar.dataset.touched === "true") {
+				const barRect = bar.getBoundingClientRect()
+
+				if (x >= barRect.left - 2 && x < barRect.right + 2 && thumbIndex === -1) {
+					thumbIndex = i
 					bar.dataset.thumb = "true"
 				} else {
-					bar.dataset.thumb = "false"
+					delete bar.dataset.thumb
 				}
 
-				bar.dataset.touched = "false"
-
+				delete bar.dataset.touched
 				delete bar.dataset.touchProximity
 			}
 
-			const intermediateBrightness = store.get(store.get(intermediateBrightnessAtoms)[deviceName])
-			if (intermediateBrightness !== -1) {
-				onRequestBrightnessChange(intermediateBrightness)
-				setIntermediateBrightness(-1)
+			if (thumbIndex !== -1) {
+				// Map bar index to step: bar 42 -> step 1, bar 0 -> step 43
+				const step = LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1 - thumbIndex
+				onRequestBrightnessStepChange(step)
+			} else {
+				const firstElement = barRefs.current[barRefs.current.length - 1]
+				const lastElement = barRefs.current[0]
+				if (lastElement && x > lastElement.getBoundingClientRect().right) {
+					lastElement.dataset.thumb = "true"
+					setIntermediateBrightnessStep(LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1)
+					if (last) {
+						onRequestBrightnessStepChange(LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1)
+					}
+				} else if (firstElement && x < firstElement.getBoundingClientRect().left) {
+					firstElement.dataset.thumb = "true"
+					setIntermediateBrightnessStep(0)
+					if (last) {
+						onRequestBrightnessStepChange(0)
+					}
+				}
 			}
 		} else {
 			let touchedIndex = -1
-			for (let i = 0; i < BAR_COUNT; i++) {
+			for (let i = 0; i < LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT; i++) {
 				const bar = barRefs.current[i]
 				if (!bar) continue
 
@@ -675,15 +726,15 @@ function LightControlTile({
 
 				delete bar.dataset.thumb
 
-				if (x > barRect.left - 2 && x < barRect.right + 2 && touchedIndex === -1) {
+				if (x >= barRect.left - 2 && x < barRect.right + 2 && touchedIndex === -1) {
 					touchedIndex = i
 
 					bar.dataset.touched = "true"
 					bar.dataset.highlighted = "false"
 					delete bar.dataset.touchProximity
 
-					const brightness = 1 - i / BAR_COUNT
-					setIntermediateBrightness(Math.round(brightness * 100))
+					const step = LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - i - 1
+					setIntermediateBrightnessStep(step)
 
 					if (barRefs.current[i - 1]) {
 						barRefs.current[i - 1]!.dataset.touchProximity = "close"
@@ -745,9 +796,10 @@ function LightControlTile({
 				const lastElement = barRefs.current[0]
 				if (lastElement && x > lastElement.getBoundingClientRect().right) {
 					lastElement.dataset.thumb = "true"
-					setIntermediateBrightness(100)
+					setIntermediateBrightnessStep(LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1)
 				} else if (firstElement && x < firstElement.getBoundingClientRect().left) {
-					setIntermediateBrightness(0)
+					firstElement.dataset.thumb = "true"
+					setIntermediateBrightnessStep(0)
 				}
 			}
 		}
@@ -760,12 +812,13 @@ function LightControlTile({
 				ref={touchContainerRef}
 				className="group flex-1 flex flex-row-reverse justify-center items-center touch-none gap-x-1 w-full translate-y-6"
 			>
-				{Array.from({ length: BAR_COUNT }).map((_, index) => {
-					const highlighted = index >= initialHighlightIndexStart
+				{Array.from({ length: LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT }).map((_, index) => {
+					const highlighted = index > initialHighlightIndexStart
 					return (
 						<div
 							data-highlighted={highlighted}
 							data-thumb={index === initialHighlightIndexStart}
+							data-prev-touched={false}
 							data-touched={false}
 							ref={(ref) => {
 								barRefs.current[index] = ref
@@ -786,23 +839,25 @@ function LightControlTile({
 }
 
 function BrightnessLevelLabel({ deviceName }: { deviceName: ZigbeeDeviceName }) {
-	const currentBrightness = useAtomValue(useAtomValue(brightnessAtoms)[deviceName])
-	const intermediateBrightness = useAtomValue(useAtomValue(intermediateBrightnessAtoms)[deviceName])
+	const currentBrightnessStep = useAtomValue(useAtomValue(brightnessStepAtoms)[deviceName])
+	const intermediateBrightnessStep = useAtomValue(useAtomValue(intermediateBrightnessStepAtoms)[deviceName])
 
-	const brightness = intermediateBrightness === -1 ? currentBrightness : intermediateBrightness
+	const step = intermediateBrightnessStep === -1 ? currentBrightnessStep : intermediateBrightnessStep
 
 	let label: string
-	if (brightness === 0) {
+	if (step === 0) {
 		label = "OFF"
 	} else {
-		label = `${brightness}%`
+		// Convert step to percentage: step 1 = ~2%, step 43 = 100%
+		const brightnessPercentage = Math.round((step / (LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1)) * 100)
+		label = `${brightnessPercentage}%`
 	}
 
 	return (
 		<p
 			className={cn(
 				"flex-1 text-right font-bold font-mono tracking-tigher",
-				brightness === 0 ? "text-neutral-400" : "text-teal-400",
+				step === 0 ? "text-neutral-400" : "text-teal-400",
 			)}
 		>
 			{label}
