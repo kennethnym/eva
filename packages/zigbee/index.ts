@@ -12,16 +12,7 @@ export type ZigbeeDeviceStates = {
 	}
 	[ZIGBEE_DEVICE.livingRoomFloorLamp]: {
 		brightness: number
-		level_config: {
-			on_level: "previous"
-		}
-		linkquality: number
 		state: "ON" | "OFF"
-		update: {
-			installed_version: number
-			latest_version: number
-			state: "available" | "idle"
-		}
 	}
 }
 
