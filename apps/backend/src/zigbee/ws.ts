@@ -1,4 +1,4 @@
-import type { JrpcRequest, JrpcResponse } from "@eva/jrpc"
+import { type JrpcRequest, type JrpcResponse, newJrpcRequestId } from "@eva/jrpc"
 import { ALL_ZIGBEE_DEVICE_NAMES, type ZigbeeDeviceName, type ZigbeeDeviceState } from "@eva/zigbee"
 import type { WSContext } from "hono/ws"
 import type { DeviceMessageListener, ZigbeeController } from "./controller"
@@ -8,15 +8,17 @@ export class WebSocketHandler {
 
 	constructor(private readonly controller: ZigbeeController) {}
 
-	handleWebsocketOpen(event: Event, ws: WSContext) {
+	handleWebsocketOpen(_event: Event, ws: WSContext) {
 		for (const device of ALL_ZIGBEE_DEVICE_NAMES) {
 			const l: DeviceMessageListener = (msg) => {
-				const state = msg as ZigbeeDeviceState
+				const state = msg as ZigbeeDeviceState<typeof device>
 				const request: JrpcRequest<"showDeviceState"> = {
-					id: crypto.randomUUID(),
+					id: newJrpcRequestId(),
 					jsonrpc: "2.0",
 					method: "showDeviceState",
-					params: { deviceName: device, state },
+					params: { deviceName: device, state } as {
+						[K in ZigbeeDeviceName]: { deviceName: K; state: ZigbeeDeviceState<K> }
+					}[ZigbeeDeviceName],
 				}
 				ws.send(JSON.stringify(request))
 			}

@@ -1,4 +1,4 @@
-import type { JrpcRequest, JrpcResponse } from "@eva/jrpc"
+import { type JrpcRequest, type JrpcResponse, newJrpcRequestId } from "@eva/jrpc"
 import { ZIGBEE_DEVICE, type ZigbeeDeviceName } from "@eva/zigbee"
 import { useQuery } from "@tanstack/react-query"
 import { useDrag } from "@use-gesture/react"
@@ -77,8 +77,8 @@ function App() {
 			return
 		}
 
-		const request: JrpcRequest<"setDeviceState"> = {
-			id: crypto.randomUUID(),
+		const req: JrpcRequest<"setDeviceState"> = {
+			id: newJrpcRequestId(),
 			jsonrpc: "2.0",
 			method: "setDeviceState",
 			params: {
@@ -90,8 +90,7 @@ function App() {
 			},
 		}
 
-		ws.send(JSON.stringify(request))
-		console.log("Sent brightness change:", { deviceName, brightness })
+		ws.send(JSON.stringify(req))
 	}
 
 	return (
@@ -535,7 +534,7 @@ function SystemTile({
 				labels: Array.from({ length: 20 }, (_, index) => index),
 				datasets: [
 					{
-						data: Array.from({ length: 20 }, (_, i) => null),
+						data: Array.from({ length: 20 }, (_, __) => null),
 						fill: true,
 						backgroundColor: fillGradient,
 						borderColor: "#2dd4bf",
