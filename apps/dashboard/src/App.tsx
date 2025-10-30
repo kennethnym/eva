@@ -27,6 +27,11 @@ const intermediateBrightnessAtoms = atom({
 	[ZIGBEE_DEVICE.livingRoomFloorLamp]: atom(-1),
 })
 
+const DEVICE_FRIENDLY_NAMES = {
+	[ZIGBEE_DEVICE.deskLamp]: "Desk Lamp",
+	[ZIGBEE_DEVICE.livingRoomFloorLamp]: "Floor Lamp",
+} as const
+
 function App() {
 	const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:"
 	const wsHost = import.meta.env.VITE_API_HOST || window.location.host
@@ -773,7 +778,7 @@ function LightControlTile({
 				})}
 			</div>
 			<div className="px-4 pb-2 w-full flex flex-row items-center justify-center space-x-2">
-				<p className="tracking-tigher uppercase">Desk light</p>
+				<p className="tracking-tigher uppercase">{DEVICE_FRIENDLY_NAMES[deviceName]}</p>
 				<BrightnessLevelLabel deviceName={deviceName} />
 			</div>
 		</Tile>
