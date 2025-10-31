@@ -425,7 +425,7 @@ function TFLDistruptionItem({ lineId, reason, severity }: { lineId: TubeLine; re
 			lineStyleClass = "bg-purple-800"
 			break
 		case "northern":
-			lineStyleClass = "bg-black dark:bg-neutral-200 text-black"
+			lineStyleClass = "bg-black text-neutral-200 dark:bg-neutral-200 dark:text-black"
 			break
 		case "piccadilly":
 			lineStyleClass = "bg-blue-900"
