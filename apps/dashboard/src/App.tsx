@@ -621,9 +621,9 @@ function SystemTile({
 
 	return (
 		<Tile className={cn("h-full flex flex-col justify-start items-start", className)}>
-			<div className="grid grid-cols-6 px-4 pt-3 w-full">
-				<div className="col-span-3 flex flex-row items-center space-x-2">
-					<p className="text-2xl">{displayName}</p>
+			<div className="grid grid-cols-6 px-3 pt-2 w-full">
+				<div className="col-span-3 self-start flex flex-row items-center space-x-2">
+					<p className="leading-none tracking-tight text-2xl">{displayName}</p>
 					<div
 						className={cn("size-2 border rounded-full", {
 							"animate-pulse border-green-300 bg-green-500": beszelSystemsData.status === "up",
