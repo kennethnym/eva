@@ -597,12 +597,36 @@ function SystemTile({
 		)
 	}
 
+	let systemStatusContent: React.ReactNode
+	switch (beszelSystemsData.status) {
+		case "up":
+			systemStatusContent = (
+				<div className="w-full flex-1 min-w-0 basis-0 relative mb-2">
+					<canvas ref={onCanvasRef} className="min-h-0 absolute top-0 left-0 w-full h-full" />
+				</div>
+			)
+			break
+
+		case "down":
+			systemStatusContent = (
+				<div className="w-full flex-1 flex items-center justify-center">
+					<p className="font-mono text-red-500 uppercase font-bold">System offline</p>
+				</div>
+			)
+			break
+	}
+
 	return (
 		<Tile className={cn("h-full flex flex-col justify-start items-start", className)}>
 			<div className="grid grid-cols-6 px-4 pt-3 w-full">
 				<div className="col-span-3 flex flex-row items-center space-x-2">
 					<p className="text-2xl">{displayName}</p>
-					<div className="size-2 border border-green-300 bg-green-500 rounded-full animate-pulse" />
+					<div
+						className={cn("size-2 border rounded-full", {
+							"animate-pulse border-green-300 bg-green-500": beszelSystemsData.status === "up",
+							"border-red-300 bg-red-500": beszelSystemsData.status === "down",
+						})}
+					/>
 				</div>
 				<div className="flex flex-col font-mono">
 					<p className="text-neutral-400 text-right leading-none">CPU</p>
@@ -617,9 +641,7 @@ function SystemTile({
 					<p className="text-right">{beszelSystemsData.info.disk.toFixed(0).padStart(3, "0")}</p>
 				</div>
 			</div>
-			<div className="w-full flex-1 min-w-0 basis-0 relative mb-2">
-				<canvas ref={onCanvasRef} className="min-h-0 absolute top-0 left-0 w-full h-full" />
-			</div>
+			{systemStatusContent}
 		</Tile>
 	)
 }

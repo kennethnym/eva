@@ -16,6 +16,7 @@ const API_BASE_URL = getApiBaseUrl()
 // System Info
 export interface BeszelSystemInfo {
 	name: string
+	status: "up" | "down"
 	info: {
 		cpu: number
 		ram: number
