@@ -197,7 +197,7 @@ export function LightControlTile({
 					delete bar.dataset.touchProximity
 
 					const step = LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - i - 1
-					requestBrightnessStepChange(step)
+					setIntermediateBrightnessStep(step)
 
 					if (barRefs.current[i - 1]) {
 						barRefs.current[i - 1]!.dataset.touchProximity = "close"
@@ -259,10 +259,10 @@ export function LightControlTile({
 				const lastElement = barRefs.current[0]
 				if (lastElement && x > lastElement.getBoundingClientRect().right) {
 					lastElement.dataset.thumb = "true"
-					requestBrightnessStepChange(LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1)
+					setIntermediateBrightnessStep(LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT - 1)
 				} else if (firstElement && x < firstElement.getBoundingClientRect().left) {
 					firstElement.dataset.thumb = "true"
-					requestBrightnessStepChange(0)
+					setIntermediateBrightnessStep(0)
 				}
 			}
 		}
