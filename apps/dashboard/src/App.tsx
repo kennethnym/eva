@@ -534,10 +534,16 @@ function SystemTile({
 	const onCanvasRef = (elem: HTMLCanvasElement | null) => {
 		if (!elem || chartRef.current) return
 
-		const fillGradient = elem?.getContext("2d")?.createLinearGradient(0, 0, 0, elem.height)
-		fillGradient?.addColorStop(0, "#2dd4bf")
-		fillGradient?.addColorStop(0.5, "rgba(45, 212, 191, 0)")
-		fillGradient?.addColorStop(1, "rgba(45, 212, 191, 0)")
+		const cpuFillGradient = elem?.getContext("2d")?.createLinearGradient(0, 0, 0, elem.height)
+		cpuFillGradient?.addColorStop(0, "#2dd4bf")
+		cpuFillGradient?.addColorStop(0.5, "rgba(45, 212, 191, 0)")
+		cpuFillGradient?.addColorStop(1, "rgba(45, 212, 191, 0)")
+
+		const ramFillGradient = elem?.getContext("2d")?.createLinearGradient(0, 0, 0, elem.height)
+		ramFillGradient?.addColorStop(0, "#a78bfa")
+		ramFillGradient?.addColorStop(0.5, "rgba(167, 139, 250, 0)")
+		ramFillGradient?.addColorStop(1, "rgba(167, 139, 250, 0)")
+
 		chartRef.current = new Chart(elem, {
 			type: "line",
 			data: {
@@ -546,8 +552,15 @@ function SystemTile({
 					{
 						data: Array.from({ length: 20 }, (_, __) => null),
 						fill: true,
-						backgroundColor: fillGradient,
+						backgroundColor: cpuFillGradient,
 						borderColor: "#2dd4bf",
+						tension: 0.1,
+					},
+					{
+						data: Array.from({ length: 20 }, (_, __) => null),
+						fill: true,
+						backgroundColor: ramFillGradient,
+						borderColor: "#a78bfa",
 						tension: 0.1,
 					},
 				],
@@ -576,19 +589,30 @@ function SystemTile({
 
 	useLayoutEffect(() => {
 		const cpu = beszelSystemsData?.info.cpu
-		if (!chartRef.current || cpu === undefined) return
+		const ram = beszelSystemsData?.info.ram
+		if (!chartRef.current || cpu === undefined || ram === undefined) return
 
-		const dataset = chartRef.current.data.datasets[0]
+		const cpuDataset = chartRef.current.data.datasets[0]
+		const ramDataset = chartRef.current.data.datasets[1]
 
-		const nextData = Array.from({ length: 20 }, (_, i) => {
+		const nextCpuData = Array.from({ length: 20 }, (_, i) => {
 			if (i === 19) {
 				return null
 			}
-			return dataset.data[i + 1]
+			return cpuDataset.data[i + 1]
 		})
-		nextData[19] = cpu
+		nextCpuData[19] = cpu
 
-		dataset.data = nextData
+		const nextRamData = Array.from({ length: 20 }, (_, i) => {
+			if (i === 19) {
+				return null
+			}
+			return ramDataset.data[i + 1]
+		})
+		nextRamData[19] = ram
+
+		cpuDataset.data = nextCpuData
+		ramDataset.data = nextRamData
 		chartRef.current.update()
 	})
 
