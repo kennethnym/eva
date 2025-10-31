@@ -351,7 +351,7 @@ export function LightSceneTile({
 					)}
 				>
 					<Icon size={16} strokeWidth={2} />
-					<p className="text-lg tracking-none leading-none">{name}</p>
+					<p className="text-md tracking-none leading-none uppercase">{name}</p>
 				</button>
 			))}
 		</Tile>
