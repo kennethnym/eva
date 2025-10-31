@@ -256,7 +256,7 @@ function WeatherTile() {
 						L:{lowTemp}°
 					</p>
 				</div>
-				<div className="flex flex-col space-y-2 flex-[1]">
+				<div className="flex flex-col space-y-2 flex-[2]">
 					{Array.from({ length: 24 }).map((_, index) => {
 						if (index === highlightIndexStart) {
 							return (
@@ -294,9 +294,9 @@ function WeatherTile() {
 						)
 					})}
 				</div>
-				<div className="flex flex-col justify-start h-full space-y-2 flex-[2]">
+				<div className="flex flex-col justify-start h-full space-y-2 flex-[3]">
 					<p
-						className={cn("text-3xl leading-none tracking-tight font-light pl-2", {
+						className={cn("text-3xl leading-none tracking-tight font-light pl-4", {
 							"text-red-400": errorWeatherDescription,
 							"animate-pulse": isLoadingWeatherDescription,
 						})}
