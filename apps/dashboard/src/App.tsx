@@ -375,7 +375,7 @@ function TFLTile({ className }: { className?: string }) {
 	return (
 		<Tile
 			className={cn(
-				"gap-x-1 pt-1 h-full col-span-2 row-span-1 grid grid-cols-[min-content_1fr] auto-rows-min overflow-y-auto",
+				"pt-1 h-full col-span-2 row-span-1 grid grid-cols-[min-content_1fr] auto-rows-min overflow-y-auto",
 				className,
 			)}
 		>
@@ -425,7 +425,7 @@ function TFLDistruptionItem({ lineId, reason, severity }: { lineId: TubeLine; re
 			lineStyleClass = "bg-purple-800"
 			break
 		case "northern":
-			lineStyleClass = "bg-black"
+			lineStyleClass = "bg-black dark:bg-neutral-200 text-black"
 			break
 		case "piccadilly":
 			lineStyleClass = "bg-blue-900"
@@ -498,7 +498,7 @@ function TFLDistruptionItem({ lineId, reason, severity }: { lineId: TubeLine; re
 			<div className="h-full flex items-center justify-center px-2 py-0.5">
 				<p
 					className={cn(
-						"text-neutral-200 text-xl uppercase font-bold w-full text-center px-1 rounded-lg",
+						"text-neutral-200 text-sm uppercase w-full text-center px-1 rounded-lg",
 						lineStyleClass,
 					)}
 				>
