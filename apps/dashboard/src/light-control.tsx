@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react"
 import cn from "./components/lib/cn"
 import { Tile } from "./components/tile"
 
-const LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT = 40
+const LIGHT_CONTROL_TILE_SLIDER_BAR_COUNT = 36
 
 // Store brightness as step (0-43) to match the 44 bars exactly
 // Step 0 = OFF, Steps 1-43 map to bars 42-0
