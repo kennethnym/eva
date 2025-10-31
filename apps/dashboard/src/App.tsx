@@ -16,6 +16,7 @@ import {
 	stepToBrightness,
 } from "./light-control"
 import { StatusSeverity, TubeLine, formatLineName, tflDisruptionsQuery } from "./tfl"
+import { useAutoTheme } from "./use-auto-theme"
 import {
 	DEFAULT_LATITUDE,
 	DEFAULT_LONGITUDE,
@@ -31,6 +32,8 @@ function App() {
 	const websocket = useRef(new WebSocket(`${wsProtocol}//${wsHost}/api/zigbee`))
 
 	const store = useStore()
+
+	useAutoTheme(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
 
 	useEffect(() => {
 		const ws = websocket.current
