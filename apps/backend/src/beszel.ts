@@ -8,6 +8,7 @@ beszel.use("*", beszelAuth())
 
 interface BeszelSystemInfo {
 	name: string
+	status: "up" | "down"
 	info: {
 		cpu: number
 		ram: number
@@ -17,6 +18,7 @@ interface BeszelSystemInfo {
 
 interface BeszelApiSystem {
 	name: string
+	status: "up" | "down"
 	info: {
 		cpu: number
 		mp: number // memory percentage
@@ -56,6 +58,7 @@ beszel.get("/systems", async (c) => {
 
 		const systems: BeszelSystemInfo[] = data.items.map((system) => ({
 			name: system.name,
+			status: system.status,
 			info: {
 				cpu: system.info.cpu,
 				ram: system.info.mp,
