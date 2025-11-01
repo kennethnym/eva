@@ -15,7 +15,7 @@ export function Kuromi() {
 	const currentFrame = kuromiFrames[frameIndex]
 
 	return (
-		<pre className="leading-none select-none font-mono text-black dark:text-neutral-100 scale-[5%]">
+		<pre className="leading-none tracking-[0.6em] select-none font-mono text-black dark:text-white scale-[5%]">
 			{currentFrame.map((line, index) => (
 				// biome-ignore lint/suspicious/noArrayIndexKey: frame lines don't have unique identifiers
 				<div key={index}>{line}</div>
