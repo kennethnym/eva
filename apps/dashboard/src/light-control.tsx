@@ -320,7 +320,7 @@ function BrightnessLevelLabel({ deviceName }: { deviceName: ZigbeeDeviceName }) 
 		<p
 			className={cn(
 				"flex-1 text-right font-bold font-mono tracking-tigher",
-				step === 0 ? "text-neutral-400" : "text-teal-400",
+				step === 0 ? "text-neutral-400" : "text-teal-500 dark:text-teal-400",
 			)}
 		>
 			{label}
@@ -346,7 +346,7 @@ export function LightSceneTile({
 					className={cn(
 						"w-full gap-2 flex flex-row items-end justify-start h-full border tracking-tigher first:rounded-t-lg last:rounded-b-lg transition-all duration-150 active:transition-none",
 						activeSceneId === id
-							? "p-2 border-teal-500 text-teal-500 border-2 font-bold"
+							? "p-2 border-teal-500 text-teal-500 dark:text-teal-400 border-2 font-bold"
 							: "p-[9px] text-neutral-400 border-neutral-300 dark:border-neutral-800 active:shadow-inner active:bg-neutral-300 dark:active:bg-teal-500 active:text-neutral-900 font-lighter",
 					)}
 				>
