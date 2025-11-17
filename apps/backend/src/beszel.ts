@@ -32,6 +32,7 @@ beszel.get("/systems", async (c) => {
 		const token = c.get("beszelToken")
 
 		if (!beszelHost) {
+			console.error("[Beszel API] BESZEL_HOST environment variable not set")
 			return c.json({ error: "BESZEL_HOST environment variable not set" }, 500)
 		}
 
@@ -42,10 +43,17 @@ beszel.get("/systems", async (c) => {
 		})
 
 		if (!response.ok) {
+			const errorText = await response.text()
+			console.error(
+				`[Beszel API] Failed to fetch systems: ${response.status} ${response.statusText}`,
+				errorText ? `- ${errorText}` : "",
+			)
+			
 			return new Response(
 				JSON.stringify({
 					error: "Failed to fetch Beszel data",
 					status: response.status,
+					statusText: response.statusText,
 				}),
 				{
 					status: response.status,
@@ -66,12 +74,15 @@ beszel.get("/systems", async (c) => {
 			},
 		}))
 
+		console.log(`[Beszel API] Successfully fetched ${systems.length} systems`)
+
 		return c.json({
 			lastUpdated: new Date().toISOString(),
 			systems,
 			totalSystems: systems.length,
 		})
 	} catch (error) {
+		console.error("[Beszel API] Internal server error:", error)
 		return c.json({ error: "Internal server error", message: String(error) }, 500)
 	}
 })

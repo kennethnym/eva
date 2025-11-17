@@ -6,10 +6,24 @@ interface BeszelAuthResponse {
 
 export function beszelAuth(): MiddlewareHandler {
 	let cachedToken: string | null = null
+	let tokenExpiry: number | null = null
+	
+	// Token lifetime: 50 minutes (tokens typically expire after 1 hour, refresh before that)
+	const TOKEN_LIFETIME_MS = 50 * 60 * 1000
 
 	const authenticate = async (): Promise<string> => {
-		if (cachedToken) {
+		const now = Date.now()
+		
+		// Return cached token if it exists and hasn't expired
+		if (cachedToken && tokenExpiry && now < tokenExpiry) {
 			return cachedToken
+		}
+
+		// Log re-authentication for debugging
+		if (cachedToken && tokenExpiry && now >= tokenExpiry) {
+			console.log("[Beszel Auth] Token expired, re-authenticating...")
+		} else {
+			console.log("[Beszel Auth] Initial authentication...")
 		}
 
 		const beszelHost = process.env.BESZEL_HOST
@@ -34,11 +48,16 @@ export function beszelAuth(): MiddlewareHandler {
 		})
 
 		if (!response.ok) {
+			const errorText = await response.text()
+			console.error(`[Beszel Auth] Authentication failed: ${response.status} - ${errorText}`)
 			throw new Error(`Beszel authentication failed: ${response.status}`)
 		}
 
 		const data = (await response.json()) as BeszelAuthResponse
 		cachedToken = data.token
+		tokenExpiry = now + TOKEN_LIFETIME_MS
+
+		console.log(`[Beszel Auth] Authentication successful, token valid until ${new Date(tokenExpiry).toISOString()}`)
 
 		return cachedToken
 	}
@@ -49,6 +68,7 @@ export function beszelAuth(): MiddlewareHandler {
 			c.set("beszelToken", token)
 			await next()
 		} catch (error) {
+			console.error("[Beszel Auth] Middleware error:", error)
 			return c.json({ error: "Authentication failed", message: String(error) }, 500)
 		}
 	}
