@@ -251,7 +251,11 @@ function WeatherTile() {
 	const temperature = Math.round(currentWeather.temperature)
 	const lowTemp = Math.round(dailyForecastData?.forecastDaily?.days[0].temperatureMin ?? 0)
 	const highTemp = Math.round(dailyForecastData?.forecastDaily?.days[0].temperatureMax ?? 0)
-	const percentage = lowTemp && highTemp ? (temperature - lowTemp) / (highTemp - lowTemp) : 0
+	// Calculate percentage: handle case where lowTemp might be 0 (falsy) by checking for valid numbers
+	const tempRange = highTemp - lowTemp
+	const percentage = tempRange !== 0 && !Number.isNaN(tempRange)
+		? Math.max(0, Math.min(1, (temperature - lowTemp) / tempRange))
+		: 0
 	const highlightIndexStart = Math.floor((1 - percentage) * 23)
 	const WeatherIcon = getWeatherIcon(currentWeather.conditionCode)
 
